@@ -1,3 +1,217 @@
+﻿[English](#english) | [中文](#chinese)
+
+<a id="english"></a>
+# Stratum Desktop - Windows WPF Desktop App
+
+## Overview
+
+Stratum Desktop is the Windows desktop version of Stratum 2FA, built with WPF (.NET 9.0). It reuses the core logic from the Android version (`Stratum.Core`).
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Stratum.Desktop                       │
+│                      (WPF UI)                            │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │   MainWindow          - Authenticator list + OTP  │    │
+│  │   SettingsWindow      - Settings                  │    │
+│  │   CategoriesWindow    - Category management       │    │
+│  │   AddAuthenticatorDialog - Add authenticator      │    │
+│  │   EditAuthenticatorDialog - Edit authenticator    │    │
+│  │   ImportDialog        - Import data               │    │
+│  │   PasswordDialog      - Password input            │    │
+│  │   QrCodeDialog        - Show QR code              │    │
+│  └─────────────────────────────────────────────────┘    │
+│                          │                               │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │              Persistence Layer                    │    │
+│  │   Database.cs + 6 repository implementations      │    │
+│  └─────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                   Stratum.Core (shared)                  │
+│  ├── Entity/     - Data entities                          │
+│  ├── Service/    - Business services                      │
+│  ├── Generator/  - OTP generators (TOTP/HOTP/Steam, etc.)  │
+│  ├── Backup/     - Encrypted backup/restore               │
+│  └── Converter/  - 18+ app import converters              │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Project structure
+
+```
+Stratum.Desktop/
+├── Stratum.Desktop.csproj    # WPF project file (net9.0-windows)
+├── App.xaml                  # App entry and global resources
+├── App.xaml.cs               # App startup logic
+├── MainWindow.xaml           # Main UI
+├── MainWindow.xaml.cs
+│
+├── Views/                    # Sub-windows/dialogs
+│   ├── SettingsWindow.xaml
+│   ├── CategoriesWindow.xaml
+│   ├── AddAuthenticatorDialog.xaml
+│   ├── EditAuthenticatorDialog.xaml
+│   ├── ImportDialog.xaml
+│   ├── PasswordDialog.xaml
+│   └── QrCodeDialog.xaml
+│
+├── ViewModels/               # MVVM view models
+│   ├── MainViewModel.cs
+│   ├── AuthenticatorViewModel.cs
+│   └── CategoryViewModel.cs
+│
+├── Persistence/              # Data persistence layer
+│   ├── Database.cs           # SQLite + SQLCipher database management
+│   ├── AsyncRepository.cs    # Async repository base class
+│   ├── AuthenticatorRepository.cs
+│   ├── CategoryRepository.cs
+│   ├── AuthenticatorCategoryRepository.cs
+│   ├── CustomIconRepository.cs
+│   ├── IconPackRepository.cs
+│   └── IconPackEntryRepository.cs
+│
+├── Services/                 # Desktop services
+│   ├── Dependencies.cs       # Autofac DI container
+│   ├── PreferenceManager.cs  # User preferences (JSON)
+│   ├── LocalizationManager.cs # Language switching
+│   ├── IconResolver.cs       # Icon loading
+│   ├── DesktopAssetProvider.cs
+│   ├── DesktopIconResolver.cs
+│   └── DesktopCustomIconDecoder.cs
+│
+└── Resources/                # Resource files
+    ├── Styles.xaml           # WPF styles
+    ├── Strings.en.xaml       # English strings
+    ├── Strings.zh.xaml       # Chinese strings
+    └── Icons/                # Icon assets
+```
+
+## Data storage location
+
+All user data is stored in the Windows AppData directory, separate from the project code:
+
+```
+%APPDATA%\Stratum\
+├── authenticator.db3    # Encrypted database (SQLCipher)
+├── settings.json        # User preferences
+└── logs/                # Log files
+```
+
+Actual path: `C:\Users\<username>\AppData\Roaming\Stratum\`
+
+## Development commands
+
+### Run (Debug)
+
+```bash
+dotnet run --project Stratum.Desktop/Stratum.Desktop.csproj
+```
+
+### Build
+
+```bash
+dotnet build Stratum.Desktop/Stratum.Desktop.csproj
+```
+
+### Publish package
+
+**Single-file executable (recommended):**
+
+```bash
+dotnet publish Stratum.Desktop/Stratum.Desktop.csproj \
+  -c Release \
+  -r win-x64 \
+  --self-contained \
+  -p:PublishSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true \
+  -o ./publish
+```
+
+Output: `./publish/Stratum.exe` (~64MB, includes the .NET runtime, no dependencies needed)
+
+**Other publish options:**
+
+| Parameter | Description |
+|------|------|
+| `-r win-x64` | Target platform (can be `win-arm64`) |
+| `--self-contained` | Include .NET runtime |
+| `-p:PublishSingleFile=true` | Bundle into a single exe |
+| `-p:PublishTrimmed=true` | Trim unused code (smaller size, possible compatibility issues) |
+
+## Features
+
+### Authenticator management
+- Supports TOTP, HOTP, Steam, Mobile-OTP, Yandex, and more
+- Real-time OTP display and countdown
+- Click to copy codes
+- Drag-and-drop sorting
+- Category filtering
+- Search
+
+### Backup and restore
+- **Encrypted backup** (.stratum) - password protected
+- **HTML export** (.html) - includes QR codes, easy to print
+- **URI list** (.txt) - otpauth:// format
+
+### Import support
+- Google Authenticator
+- Aegis
+- Bitwarden
+- 2FAS
+- and 18+ other app formats
+
+### Languages
+- English
+- Chinese
+
+### Themes
+- Light mode
+- Dark mode
+- Follow system
+
+## Dependencies
+
+| Package | Version | Purpose |
+|----|------|------|
+| sqlite-net-base | 1.9.172 | SQLite ORM |
+| StratumAuth.SQLCipher | 1.1.0 | Database encryption |
+| Autofac | 8.0.0 | Dependency injection |
+| CommunityToolkit.Mvvm | 8.2.2 | MVVM toolkit |
+| Serilog.Sinks.File | 6.0.0 | Logging |
+| QRCoder | 1.6.0 | QR code generation |
+
+## Relationship with the Android version
+
+The desktop app reuses all core logic from the `Stratum.Core` project:
+
+- **Entity/** - Data entities (Authenticator, Category, etc.)
+- **Service/** - Business services (AuthenticatorService, BackupService, etc.)
+- **Generator/** - OTP generation algorithms
+- **Backup/** - Backup encryption/decryption
+- **Converter/** - Import converters for other app formats
+
+The desktop app only needs to implement:
+1. UI layer (WPF XAML + ViewModels)
+2. Persistence adaption (SQLite path, preference storage)
+3. Platform-specific services (icon resolution, resource loading, etc.)
+
+## Known issues
+
+1. QR code scanning is not implemented yet (Windows camera APIs are complex). Use file import or manual entry instead.
+2. System tray functionality requires Windows 10 1903 or later.
+
+## License
+
+GPL-3.0-only
+
+---
+
+<a id="chinese"></a>
 # Stratum Desktop - Windows WPF 桌面应用
 
 ## 概述

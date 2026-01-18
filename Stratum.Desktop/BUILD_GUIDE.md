@@ -1,3 +1,298 @@
+﻿[English](#english) | [中文](#chinese)
+
+<a id="english"></a>
+# Stratum Desktop - Build Directory Guide
+
+## 📁 Directory structure
+
+```
+Stratum.Desktop/
+├── bin/              # ❌ Auto-generated, do not commit
+├── obj/              # ❌ Auto-generated, do not commit
+├── test-build/       # ❌ Test build, do not commit
+├── releases/         # ✅ Release artifacts, can be committed
+├── Controls/         # ✅ Source code
+├── Panels/           # ✅ Source code
+├── Resources/        # ✅ Source code
+├── Services/         # ✅ Source code
+└── ...
+```
+
+---
+
+## 🔨 Build commands
+
+### 1. Development build (Debug)
+
+```bash
+dotnet build
+```
+
+**Output:** `bin/Debug/net9.0-windows/win-x64/`
+
+**Use case:** day-to-day development and debugging
+
+---
+
+### 2. Test build (Release)
+
+```bash
+dotnet publish -c Release -r win-x64 --self-contained true \
+    -p:PublishSingleFile=true \
+    -p:IncludeNativeLibrariesForSelfExtract=true \
+    -p:EnableCompressionInSingleFile=true \
+    -o "test-build"
+```
+
+**Output:** `test-build/Stratum.exe`
+
+**Use case:** quick testing of release builds
+
+---
+
+### 3. Official release
+
+```bash
+.\publish-release.bat
+```
+
+**Output:** `releases/v{VERSION}/`
+
+**Included file:**
+- `Stratum-Windows-x64-v{VERSION}.exe` - standalone executable
+
+**Use case:** create official release artifacts
+
+---
+
+## 🧹 Clean build outputs
+
+### Manual cleanup
+
+```bash
+# Windows
+rmdir /s /q bin obj test-build
+
+# Linux/macOS
+rm -rf bin obj test-build
+```
+
+### Use the cleanup script
+
+```bash
+.\clean.bat
+```
+
+This removes:
+- `bin/` - build outputs
+- `obj/` - intermediate files
+- `test-build/` - test build
+
+**Keep:**
+- `releases/` - release history
+
+---
+
+## 📦 .gitignore configuration
+
+The following directories are ignored and never committed:
+
+```gitignore
+# Auto-generated build outputs
+bin/
+obj/
+test-build/
+
+# Intermediate files
+publish/
+```
+
+**Note:** `releases/` is **not** ignored and can be committed.
+
+---
+
+## 🚀 Recommended workflow
+
+### Daily development
+
+1. **Write code**
+2. **Run for debugging:**
+   ```bash
+   dotnet run
+   ```
+3. **Commit changes:**
+   ```bash
+   git add .
+   git commit -m "feat: add new feature"
+   ```
+
+### Test release build
+
+1. **Build a test release:**
+   ```bash
+   dotnet publish -c Release -r win-x64 --self-contained true \
+       -p:PublishSingleFile=true \
+       -p:IncludeNativeLibrariesForSelfExtract=true \
+       -p:EnableCompressionInSingleFile=true \
+       -o "test-build"
+   ```
+2. **Test:**
+   ```bash
+   cd test-build
+   .\Stratum.exe
+   ```
+3. **If issues:** fix code and rebuild
+
+### Official release
+
+1. **Update version:** edit `Stratum.Desktop.csproj`
+   ```xml
+   <Version>1.0.1</Version>
+   ```
+
+2. **Run release script:**
+   ```bash
+   .\publish-release.bat
+   ```
+   Enter a version (e.g., 1.0.1)
+
+3. **Test release build:**
+   ```bash
+   cd releases\v1.0.1
+   .\Stratum-Windows-x64-v1.0.1.exe
+   ```
+
+4. **Commit release:**
+   ```bash
+   git add releases/v1.0.1
+   git commit -m "release: v1.0.1"
+   git tag v1.0.1
+   git push origin master --tags
+   ```
+
+5. **Create GitHub Release:**
+   ```bash
+   gh release create v1.0.1 \
+       releases/v1.0.1/Stratum-Windows-x64-v1.0.1.exe \
+       releases/v1.0.1/Stratum-Windows-x64-v1.0.1.zip \
+       --title "Stratum Desktop v1.0.1" \
+       --notes "Release notes here"
+   ```
+
+---
+
+## 🗑️ Safe-to-delete directories
+
+The following folders can be deleted at any time and will regenerate on build:
+
+- ✅ `bin/` - build outputs
+- ✅ `obj/` - intermediate files
+- ✅ `test-build/` - test build
+
+**Do not delete:**
+- ❌ `releases/` - release history
+- ❌ Source folders (Controls/, Panels/, Resources/, Services/, etc.)
+
+---
+
+## 💡 Tips
+
+### Disk space management
+
+If disk space is tight, clean up periodically:
+
+```bash
+# Clean all build outputs
+.\clean.bat
+
+# Or only clean bin and obj
+dotnet clean
+```
+
+### Build speed optimization
+
+If builds are slow:
+
+1. **Use incremental builds** (default):
+   ```bash
+   dotnet build
+   ```
+
+2. **Clean then rebuild:**
+   ```bash
+   dotnet clean
+   dotnet build
+   ```
+
+3. **Parallel builds** (multi-core CPU):
+   ```bash
+   dotnet build -m
+   ```
+
+---
+
+## 📊 Directory size reference
+
+| Folder | Size | Notes |
+|------|------|------|
+| `bin/Debug/` | ~50 MB | Debug build outputs |
+| `bin/Release/` | ~50 MB | Release build outputs |
+| `obj/` | ~10 MB | Intermediate files |
+| `test-build/` | ~65 MB | Single-file publish output |
+| `releases/v1.0.0/` | ~65 MB | Official release output |
+
+**Total:** ~240 MB (all build outputs)
+
+**After cleanup:** ~65 MB (only releases/)
+
+---
+
+## 🔧 Troubleshooting
+
+### Issue: build fails due to locked files
+
+**Cause:** The app is running and files are locked
+
+**Fix:**
+```bash
+# Close all Stratum instances
+taskkill /f /im Stratum.exe
+
+# Clean and rebuild
+.\clean.bat
+dotnet build
+```
+
+### Issue: release script fails
+
+**Cause:** permissions or path issues
+
+**Fix:**
+1. Run PowerShell as administrator
+2. Check if paths contain non-ASCII or special characters
+3. Run the publish command manually
+
+### Issue: test-build folder is too large
+
+**Cause:** includes the full .NET runtime
+
+**Fix:** This is expected for single-file publish. To reduce size:
+```bash
+# Framework-dependent publish (requires .NET runtime installed)
+dotnet publish -c Release -r win-x64 --self-contained false
+```
+
+---
+
+## 📚 Related docs
+
+- [PUBLISH_GUIDE.md](PUBLISH_GUIDE.md) - Detailed release guide
+- [IMPLEMENTATION_SUMMARY.md](../IMPLEMENTATION_SUMMARY.md) - Implementation summary
+- [QUICK_REFERENCE.txt](../QUICK_REFERENCE.txt) - Quick reference
+
+---
+
+<a id="chinese"></a>
 # Stratum Desktop - 构建目录说明
 
 ## 📁 目录结构

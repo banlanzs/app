@@ -1,3 +1,421 @@
+﻿[English](#english) | [中文](#chinese)
+
+<a id="english"></a>
+# Stratum Desktop - Release Guide
+
+## Quick release
+
+### Windows users
+
+**Use the release script (recommended):**
+```cmd
+cd Stratum.Desktop
+publish-release.bat
+```
+
+The script will automatically:
+1. Clean old release files
+2. Build the Release configuration
+3. Create a single-file exe
+4. Create a ZIP package
+5. Show file size and location
+
+**Manual release:**
+```cmd
+cd Stratum.Desktop
+
+REM Publish a single-file build
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=true -p:TrimMode=partial -p:EnableCompressionInSingleFile=true
+
+REM Output location
+REM bin\Release\net9.0-windows\win-x64\publish\Stratum.exe
+```
+
+### Linux/macOS users
+
+```bash
+cd Stratum.Desktop
+chmod +x publish-release.sh
+./publish-release.sh
+```
+
+---
+
+## Publish to GitHub
+
+### Method 1: GitHub CLI (recommended)
+
+```bash
+# 1. Install GitHub CLI
+# Windows: winget install GitHub.cli
+# macOS: brew install gh
+# Linux: https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+
+# 2. Sign in to GitHub
+gh auth login
+
+# 3. Create a release
+cd Stratum.Desktop
+gh release create v1.0.0 \
+  --title "Stratum Desktop v1.0.0 - UI Modernization" \
+  --notes "See IMPLEMENTATION_SUMMARY.md" \
+  releases/v1.0.0/Stratum-Windows-x64-v1.0.0.exe \
+  releases/v1.0.0/Stratum-Windows-x64-v1.0.0.zip
+```
+
+### Method 2: GitHub web UI
+
+1. Visit `https://github.com/banlanzs/stratum-2fa/releases/new`
+2. Fill in:
+   - **Tag version:** `v1.0.0`
+   - **Release title:** `Stratum Desktop v1.0.0 - UI Modernization`
+   - **Description:** Paste the Release Notes (template below)
+3. Upload files:
+   - `Stratum-Windows-x64-v1.0.0.exe`
+   - `Stratum-Windows-x64-v1.0.0.zip`
+4. Click **Publish release**
+
+---
+
+## Release Notes template
+
+```markdown
+# Stratum Desktop v1.0.0 - UI Modernization
+
+## 🎉 Major update
+
+This release delivers a full UI modernization for Stratum Desktop and a refreshed user experience.
+
+### ✨ New features
+
+- **Single window + navigation rail** - Say goodbye to multiple windows; everything is in the main window
+- **Material Design 3** - Modern design language with light/dark themes
+- **5 dedicated panels** - Home, Settings, Categories, Backup, About
+- **More spacious layout** - Window size increased from 450×600 to 850×600
+
+### 🎨 Visual improvements
+
+- ✅ Navigation rail for one-click switching
+- ✅ Material Design 3 color system
+- ✅ Light/dark theme support
+- ✅ Unified design language and interactions
+
+### 🔧 Technical improvements
+
+- ✅ Modular architecture for easier maintenance and expansion
+- ✅ MVVM pattern with improved code quality
+- ✅ Fully backward compatible, all features preserved
+
+### 📦 Downloads
+
+| Platform | File | Size |
+|------|------|------|
+| Windows x64 | [Stratum-Windows-x64-v1.0.0.exe](link) | ~60 MB |
+| Windows x64 (ZIP) | [Stratum-Windows-x64-v1.0.0.zip](link) | ~60 MB |
+
+### 📋 System requirements
+
+- **OS:** Windows 10/11 (x64)
+- **.NET runtime:** Not required (self-contained)
+- **Disk space:** ~150 MB
+
+### 🚀 Installation
+
+1. Download `Stratum-Windows-x64-v1.0.0.exe`
+2. Double-click to run
+3. On first launch, Windows Defender may prompt (click "Run anyway")
+
+### ⚠️ Notes
+
+- This version is a standalone executable and requires no installation
+- Database path: `%APPDATA%\Stratum\authenticator.db3`
+- Settings path: `%APPDATA%\Stratum\settings.json`
+- Data migrates automatically when upgrading from older versions
+
+### 📚 Full changelog
+
+See [IMPLEMENTATION_SUMMARY.md](https://github.com/banlanzs/stratum-2fa/blob/master/IMPLEMENTATION_SUMMARY.md)
+
+### 🐛 Known issues
+
+- None
+
+### 🙏 Thanks
+
+Thanks to all contributors and users for your support.
+
+---
+
+**Full source:** https://github.com/banlanzs/stratum-2fa
+**Issue tracker:** https://github.com/banlanzs/stratum-2fa/issues
+```
+
+---
+
+## Release checklist
+
+### Before release
+
+- [ ] All features tested
+- [ ] Build has zero warnings/errors (`dotnet build -c Release`)
+- [ ] Update version in `Stratum.Desktop.csproj`
+- [ ] Update `CHANGELOG.md`
+- [ ] Prepare Release Notes
+- [ ] Run release script (`publish-release.bat`)
+- [ ] Test the published exe
+- [ ] Verify file size is reasonable (50-80 MB)
+
+### During release
+
+- [ ] Create Git tag (`git tag v1.0.0`)
+- [ ] Push tag (`git push origin v1.0.0`)
+- [ ] Create GitHub Release
+- [ ] Upload release files
+- [ ] Fill in Release Notes
+- [ ] Mark as Latest Release
+
+### After release
+
+- [ ] Download and test release files
+- [ ] Verify download links work
+- [ ] Check Release Notes formatting
+- [ ] Update download links in docs
+- [ ] Announce to users (social media/forums)
+- [ ] Close resolved issues
+
+---
+
+## Versioning
+
+Follows [Semantic Versioning 2.0.0](https://semver.org/lang/zh-CN/):
+
+**Format:** `major.minor.patch`
+
+**Rules:**
+- **Major:** incompatible API changes
+  - Example: `v1.0.0` → `v2.0.0` (breaking architecture change)
+
+- **Minor:** backward-compatible feature additions
+  - Example: `v1.0.0` → `v1.1.0` (add drag-and-drop sorting)
+
+- **Patch:** backward-compatible bug fixes
+  - Example: `v1.0.0` → `v1.0.1` (fix a bug)
+
+**Examples:**
+```
+v1.0.0 - First stable release (UI modernization)
+v1.0.1 - Fix dark theme display issue
+v1.1.0 - Add drag-and-drop sorting
+v1.2.0 - Add auto-update
+v2.0.0 - Major architecture changes (if any)
+```
+
+---
+
+## FAQ
+
+### Q: The exe file is too large. What can I do?
+
+**A:** Use an optimized publish configuration:
+
+```bash
+dotnet publish -c Release -r win-x64 \
+  --self-contained true \
+  -p:PublishSingleFile=true \
+  -p:PublishTrimmed=true \
+  -p:TrimMode=partial \
+  -p:EnableCompressionInSingleFile=true
+```
+
+This can reduce size by 30-40% (from 80-120 MB down to 50-70 MB).
+
+### Q: Windows Defender blocks the app.
+
+**A:** This is normal because the exe is not digitally signed. Options:
+
+1. **Get a code signing certificate** (recommended, paid)
+   - Purchase from DigiCert, Sectigo, etc.
+   - Use `signtool` to sign the exe
+
+2. **Explain it in Release Notes**
+   ```markdown
+   ### Security notice
+
+   On first run, Windows Defender may warn because the app is not signed.
+
+   **How to run:**
+   1. Click "More info"
+   2. Click "Run anyway"
+
+   The app is open source, so you can review the code for safety.
+   ```
+
+3. **Provide a ZIP package** as an alternative download
+
+### Q: How do I support multiple platforms?
+
+**A:** Publish per platform:
+
+```bash
+# Windows x64
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+
+# Windows ARM64
+dotnet publish -c Release -r win-arm64 --self-contained true -p:PublishSingleFile=true
+
+# Linux x64
+dotnet publish -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
+
+# macOS x64
+dotnet publish -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true
+
+# macOS ARM64 (Apple Silicon)
+dotnet publish -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true
+```
+
+### Q: How do I add auto-updates?
+
+**A:** You can integrate one of these libraries:
+
+- **Squirrel.Windows** - Windows auto updates
+- **AutoUpdater.NET** - Cross-platform auto updates
+- **Velopack** - Modern update framework
+
+Example (AutoUpdater.NET):
+
+```csharp
+// In App.xaml.cs
+protected override void OnStartup(StartupEventArgs e)
+{
+    base.OnStartup(e);
+
+    AutoUpdater.Start("https://your-domain.com/update.xml");
+}
+```
+
+### Q: How do I reduce first-launch time?
+
+**A:** Enable ReadyToRun (R2R):
+
+```bash
+dotnet publish -c Release -r win-x64 \
+  --self-contained true \
+  -p:PublishSingleFile=true \
+  -p:PublishReadyToRun=true
+```
+
+Note: this increases file size but improves startup time.
+
+---
+
+## Automated release (GitHub Actions)
+
+Create `.github/workflows/release.yml`:
+
+```yaml
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Publish Windows x64
+      run: |
+        cd Stratum.Desktop
+        dotnet publish -c Release -r win-x64 --self-contained true `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:PublishTrimmed=true `
+          -p:TrimMode=partial `
+          -p:EnableCompressionInSingleFile=true
+
+    - name: Create ZIP
+      run: |
+        $version = "${{ github.ref_name }}"
+        $exePath = "Stratum.Desktop/bin/Release/net9.0-windows/win-x64/publish/Stratum.exe"
+        $zipPath = "Stratum-Windows-x64-$version.zip"
+        Compress-Archive -Path $exePath -DestinationPath $zipPath
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          Stratum.Desktop/bin/Release/net9.0-windows/win-x64/publish/Stratum.exe
+          Stratum-Windows-x64-${{ github.ref_name }}.zip
+        body: |
+          ## Stratum Desktop ${{ github.ref_name }}
+
+          ### Downloads
+          - **Windows x64:** Stratum.exe
+          - **Windows x64 (ZIP):** Stratum-Windows-x64-${{ github.ref_name }}.zip
+
+          ### System requirements
+          - Windows 10/11 (x64)
+          - No .NET runtime required
+
+          ### Full changelog
+          See [IMPLEMENTATION_SUMMARY.md](https://github.com/${{ github.repository }}/blob/master/IMPLEMENTATION_SUMMARY.md)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+**Usage:**
+
+```bash
+# Create and push tag
+git tag v1.0.0
+git push origin v1.0.0
+
+# GitHub Actions will automatically:
+# 1. Build Release configuration
+# 2. Create ZIP package
+# 3. Create GitHub Release
+# 4. Upload release files
+```
+
+---
+
+## Summary
+
+**Recommended release workflow:**
+
+1. **Development complete** → test all features
+2. **Update version** → edit `.csproj`
+3. **Run release script** → `publish-release.bat`
+4. **Test release build** → confirm exe runs
+5. **Create Git tag** → `git tag v1.0.0 && git push origin v1.0.0`
+6. **Create GitHub Release** → use `gh` CLI or web UI
+7. **Upload files** → exe and zip
+8. **Fill Release Notes** → use template
+9. **Publish** → click Publish release
+10. **Notify users** → social media/forums/email
+
+**File list:**
+- ✅ `publish-release.bat` - Windows release script
+- ✅ `publish-release.sh` - Linux/macOS release script
+- ✅ `RELEASE_GUIDE.md` - This release guide
+- ✅ Release Notes template
+- ✅ GitHub Actions config (optional)
+
+Good luck with the release! 🚀
+
+---
+
+<a id="chinese"></a>
 # Stratum Desktop - 发布指南
 
 ## 快速发布
