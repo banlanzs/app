@@ -1,10 +1,11 @@
-// Copyright (C) 2024 Stratum Contributors
+﻿// Copyright (C) 2024 Stratum Contributors
 // SPDX-License-Identifier: GPL-3.0-only
 
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Timers;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using Autofac;
 using Stratum.Core;
@@ -16,11 +17,11 @@ namespace Stratum.Desktop.ViewModels
 {
     public class AuthenticatorViewModel : INotifyPropertyChanged
     {
-        private readonly Timer _copiedFeedbackTimer;
         private readonly IconResolver _iconResolver;
         private string _code;
         private int _timeRemaining;
         private bool _justCopied;
+        private CancellationTokenSource _copiedFeedbackTokenSource;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -28,9 +29,6 @@ namespace Stratum.Desktop.ViewModels
         {
             Auth = auth ?? throw new ArgumentNullException(nameof(auth));
             _iconResolver = App.Container.Resolve<IconResolver>();
-            _copiedFeedbackTimer = new Timer(2000);
-            _copiedFeedbackTimer.Elapsed += CopiedFeedbackTimer_Elapsed;
-            _copiedFeedbackTimer.AutoReset = false;
             UpdateCode();
         }
 
@@ -141,12 +139,23 @@ namespace Stratum.Desktop.ViewModels
         public void ShowCopiedFeedback()
         {
             JustCopied = true;
-            _copiedFeedbackTimer.Stop();
-            _copiedFeedbackTimer.Start();
+            _copiedFeedbackTokenSource?.Cancel();
+            _copiedFeedbackTokenSource?.Dispose();
+            _copiedFeedbackTokenSource = new CancellationTokenSource();
+            _ = ResetCopiedFeedbackAsync(_copiedFeedbackTokenSource.Token);
         }
 
-        private void CopiedFeedbackTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private async Task ResetCopiedFeedbackAsync(CancellationToken token)
         {
+            try
+            {
+                await Task.Delay(2000, token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+
             System.Windows.Application.Current?.Dispatcher.Invoke(() =>
             {
                 JustCopied = false;

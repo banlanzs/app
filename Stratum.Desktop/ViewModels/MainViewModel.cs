@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Stratum Contributors
+﻿// Copyright (C) 2024 Stratum Contributors
 // SPDX-License-Identifier: GPL-3.0-only
 
 using System;
@@ -7,10 +7,12 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Input;
+using Autofac;
 using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using Stratum.Core.Entity;
@@ -26,7 +28,8 @@ namespace Stratum.Desktop.ViewModels
         private readonly ICategoryRepository _categoryRepository;
         private readonly IAuthenticatorCategoryRepository _authenticatorCategoryRepository;
         private readonly PreferenceManager _preferenceManager;
-        private readonly Timer _updateTimer;
+        private readonly System.Timers.Timer _updateTimer;
+        private int _updateInProgress;
 
         private string _searchText = "";
         private Category _selectedCategory;
@@ -52,7 +55,7 @@ namespace Stratum.Desktop.ViewModels
             _filteredAuthenticators = new ObservableCollection<AuthenticatorViewModel>();
             _categories = new ObservableCollection<Category>();
 
-            _updateTimer = new Timer(500);
+            _updateTimer = new System.Timers.Timer(1000);
             _updateTimer.Elapsed += UpdateTimer_Elapsed;
             _updateTimer.AutoReset = true;
 
@@ -97,9 +100,34 @@ namespace Stratum.Desktop.ViewModels
                 _authenticators.Add(new AuthenticatorViewModel(auth));
             }
 
+            await WarmUpIconsAsync();
+
             ApplyFilter();
             OnPropertyChanged(nameof(AuthenticatorCount));
             OnPropertyChanged(nameof(IsEmpty));
+        }
+
+        private async Task WarmUpIconsAsync()
+        {
+            var iconKeys = _authenticators.Select(auth => auth.Icon)
+                .Where(icon => !string.IsNullOrEmpty(icon))
+                .Distinct()
+                .ToList();
+
+            if (iconKeys.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                var iconResolver = App.Container.Resolve<IconResolver>();
+                await iconResolver.WarmUpAsync(iconKeys);
+            }
+            catch (Exception ex)
+            {
+                _log.Debug(ex, "Failed to warm up icon cache");
+            }
         }
 
         private async Task LoadCategoriesAsync()
@@ -157,13 +185,28 @@ namespace Stratum.Desktop.ViewModels
 
         private void UpdateTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            if (Interlocked.Exchange(ref _updateInProgress, 1) == 1)
+            {
+                return;
+            }
+
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null)
+            {
+                Interlocked.Exchange(ref _updateInProgress, 0);
+                return;
+            }
+
+            dispatcher.InvokeAsync(() =>
             {
                 foreach (var auth in _authenticators)
                 {
-                    auth.UpdateCode();
+                    if (auth.IsTimeBased)
+                    {
+                        auth.UpdateCode();
+                    }
                 }
-            });
+            }).Task.ContinueWith(_ => Interlocked.Exchange(ref _updateInProgress, 0));
         }
 
         private async void AddAuthenticator()
@@ -200,27 +243,14 @@ namespace Stratum.Desktop.ViewModels
             {
                 Owner = Application.Current.MainWindow
             };
+
             dialog.LoadAuthenticator(auth.Auth);
 
             if (dialog.ShowDialog() == true && dialog.Result != null)
             {
                 try
                 {
-                    var oldSecret = auth.Auth.Secret;
                     var updated = dialog.Result;
-
-                    if (!string.Equals(oldSecret, updated.Secret, StringComparison.OrdinalIgnoreCase))
-                    {
-                        await _authenticatorRepository.ChangeSecretAsync(oldSecret, updated.Secret);
-                    }
-
-                    updated.Icon = auth.Auth.Icon;
-                    updated.CopyCount = auth.Auth.CopyCount;
-                    updated.Ranking = auth.Auth.Ranking;
-
-                    await _authenticatorRepository.UpdateAsync(updated);
-
-                    auth.Auth.Type = updated.Type;
                     auth.Auth.Issuer = updated.Issuer;
                     auth.Auth.Username = updated.Username;
                     auth.Auth.Secret = updated.Secret;
@@ -229,6 +259,8 @@ namespace Stratum.Desktop.ViewModels
                     auth.Auth.Digits = updated.Digits;
                     auth.Auth.Period = updated.Period;
                     auth.Auth.Counter = updated.Counter;
+                    auth.Auth.Icon = updated.Icon;
+                    await _authenticatorRepository.UpdateAsync(auth.Auth);
                     auth.RefreshFromAuth();
 
                     ApplyFilter();
