@@ -34,16 +34,11 @@ jobs:
       - name: Install Android platform tools
         run: $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install platform-tools
 
-      # - name: Restore NuGet packages
-      #   run: dotnet restore
-
-      # - name: Run tests
-      #   run: dotnet test --configuration $CONFIGURATION --no-restore --collect:"XPlat Code Coverage" --results-directory ./coverage Stratum.Test/Stratum.Test.csproj
       - name: Restore NuGet packages
-        run: dotnet restore --ignore-failed-sources
+        run: dotnet restore
 
       - name: Run tests
-        run: dotnet test --configuration $CONFIGURATION --no-restore --collect:"XPlat Code Coverage" --results-directory ./coverage Stratum.Core/Stratum.Core.csproj
+        run: dotnet test --configuration $CONFIGURATION --no-restore --collect:"XPlat Code Coverage" --results-directory ./coverage Stratum.Test/Stratum.Test.csproj
 
       - name: Publish Android
         run: |
