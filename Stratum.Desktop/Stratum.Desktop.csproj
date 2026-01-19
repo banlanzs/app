@@ -22,14 +22,18 @@
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 
-        <!-- Memory Optimization -->
+        <!-- Memory Optimization - Conservative (to ensure WPF compatibility) -->
         <TieredCompilation>false</TieredCompilation>
-        <TieredCompilationQuickJit>false</TieredCompilationQuickJit>
-        <DebuggerSupport>false</DebuggerSupport>
-        <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
         <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
-        <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
-        <UseSystemResourceKeys>true</UseSystemResourceKeys>
+        <EventSourceSupport>false</EventSourceSupport>
+        <XmlResolverIsNetworkingEnabledByDefault>false</XmlResolverIsNetworkingEnabledByDefault>
+        <StartupHookSupport>false</StartupHookSupport>
+        <UseRidGraph>false</UseRidGraph>
+        <EnableRequestDelegateGenerator>false</EnableRequestDelegateGenerator>
+        <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
+        <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+        <EnableCppCLIHostActivation>false</EnableCppCLIHostActivation>
+        <EnableGenericMath>false</EnableGenericMath>
     </PropertyGroup>
 
     <ItemGroup>

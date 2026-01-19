@@ -25,7 +25,7 @@
                     ToolTip="{DynamicResource Settings}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="&#x2699;" FontSize="20" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Settings" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Settings}" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
 
@@ -34,10 +34,10 @@
                     Grid.Column="1"
                     Style="{StaticResource BottomNavButtonStyle}"
                     Click="SearchButton_Click"
-                    ToolTip="Search">
+                    ToolTip="{DynamicResource Search}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="&#x1F50D;" FontSize="20" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Search" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Search}" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
 
@@ -47,7 +47,7 @@
                     Style="{StaticResource FABStyle}"
                     Click="AddButton_Click"
                     ToolTip="{DynamicResource Add}">
-                <TextBlock Text="+" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="+" FontSize="24" FontWeight="Bold" Foreground="{StaticResource OnPrimaryBrush}"/>
             </Button>
 
             <!-- Categories Button -->
@@ -58,7 +58,7 @@
                     ToolTip="{DynamicResource Categories}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="&#x1F4C1;" FontSize="20" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Categories" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Categories}" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
 
@@ -70,7 +70,7 @@
                     ToolTip="{DynamicResource About}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="&#x2139;" FontSize="20" HorizontalAlignment="Center"/>
-                    <TextBlock Text="About" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource About}" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
         </Grid>

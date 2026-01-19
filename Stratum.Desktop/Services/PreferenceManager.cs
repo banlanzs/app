@@ -38,8 +38,8 @@ namespace Stratum.Desktop.Services
                         Converters = { new JsonStringEnumConverter() }
                     };
                     _preferences = JsonSerializer.Deserialize<Preferences>(json, options) ?? new Preferences();
-                    _log.Information("Preferences loaded successfully. Language: {Language}, Theme: {Theme}",
-                        _preferences.Language, _preferences.Theme);
+                    _log.Information("Preferences loaded successfully. Language: {Language}",
+                        _preferences.Language);
                 }
                 else
                 {
@@ -75,8 +75,8 @@ namespace Stratum.Desktop.Services
                 }
 
                 File.WriteAllText(_filePath, json);
-                _log.Information("Preferences saved to {Path}. Language: {Language}, Theme: {Theme}",
-                    _filePath, _preferences.Language, _preferences.Theme);
+                _log.Information("Preferences saved to {Path}. Language: {Language}",
+                    _filePath, _preferences.Language);
             }
             catch (Exception ex)
             {
@@ -87,7 +87,6 @@ namespace Stratum.Desktop.Services
 
     public class Preferences
     {
-        public Theme Theme { get; set; } = Theme.System;
         public AppLanguage Language { get; set; } = AppLanguage.English;
         public SortMode SortMode { get; set; } = SortMode.AlphabeticalAscending;
         public bool TapToCopy { get; set; } = true;
@@ -98,13 +97,6 @@ namespace Stratum.Desktop.Services
         public bool MinimizeToTray { get; set; } = false;
         public bool StartMinimized { get; set; } = false;
         public bool StartWithWindows { get; set; } = false;
-    }
-
-    public enum Theme
-    {
-        Light,
-        Dark,
-        System
     }
 
     public enum SortMode

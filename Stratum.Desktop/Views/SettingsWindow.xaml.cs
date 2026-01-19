@@ -40,7 +40,6 @@ namespace Stratum.Desktop.Views
         {
             var prefs = _preferenceManager.Preferences;
 
-            ThemeComboBox.SelectedIndex = (int)prefs.Theme;
             LanguageComboBox.SelectedIndex = (int)prefs.Language;
             ShowUsernamesCheckBox.IsChecked = prefs.ShowUsernames;
             TapToCopyCheckBox.IsChecked = prefs.TapToCopy;
@@ -52,13 +51,6 @@ namespace Stratum.Desktop.Views
         {
             if (_isInitializing) return;
             _preferenceManager.Save();
-        }
-
-        private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isInitializing) return;
-            _preferenceManager.Preferences.Theme = (Theme)ThemeComboBox.SelectedIndex;
-            SaveSettings();
         }
 
         private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -94,8 +86,42 @@ namespace Stratum.Desktop.Views
         private void SortModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_isInitializing) return;
-            _preferenceManager.Preferences.SortMode = (SortMode)SortModeComboBox.SelectedIndex;
+            var sortMode = (SortMode)SortModeComboBox.SelectedIndex;
+            _preferenceManager.Preferences.SortMode = sortMode;
             SaveSettings();
+            
+            // Apply sorting immediately
+            ApplySorting(sortMode);
+        }
+
+        private void ApplySorting(SortMode sortMode)
+        {
+            try
+            {
+                // Get the main window and its view model
+                if (Application.Current.MainWindow is MainWindow mainWindow)
+                {
+                    var viewModel = mainWindow.DataContext as ViewModels.MainViewModel;
+                    if (viewModel != null)
+                    {
+                        var sortType = sortMode switch
+                        {
+                            SortMode.AlphabeticalAscending => "NameAsc",
+                            SortMode.AlphabeticalDescending => "NameDesc",
+                            SortMode.CopyCountDescending => "CopyCountDesc",
+                            SortMode.Custom => "Custom",
+                            _ => "Custom"
+                        };
+                        
+                        viewModel.SortAuthenticators(sortType);
+                        _log.Information("Applied sorting: {SortMode}", sortMode);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to apply sorting");
+            }
         }
 
         private async void CreateBackupButton_Click(object sender, RoutedEventArgs e)

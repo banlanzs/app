@@ -22,8 +22,25 @@ namespace Stratum.Desktop.Panels
 
         public void FocusSearchBox()
         {
-            // Search functionality will be handled by the bottom navigation
-            // No longer have a search box in the header
+            SearchTextBox?.Focus();
+        }
+
+        private void ClearSearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.ClearSearchCommand.Execute(null);
+            }
+            SearchTextBox?.Focus();
+        }
+
+        private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && DataContext is MainViewModel viewModel)
+            {
+                viewModel.ClearSearchCommand.Execute(null);
+                e.Handled = true;
+            }
         }
 
         private void AuthenticatorCard_MouseDown(object sender, MouseButtonEventArgs e)

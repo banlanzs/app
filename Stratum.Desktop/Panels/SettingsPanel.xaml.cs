@@ -46,7 +46,6 @@ namespace Stratum.Desktop.Panels
         {
             var prefs = _preferenceManager.Preferences;
 
-            ThemeComboBox.SelectedIndex = (int)prefs.Theme;
             LanguageComboBox.SelectedIndex = (int)prefs.Language;
             ShowUsernamesCheckBox.IsChecked = prefs.ShowUsernames;
             TapToCopyCheckBox.IsChecked = prefs.TapToCopy;
@@ -58,13 +57,6 @@ namespace Stratum.Desktop.Panels
         {
             if (_isInitializing) return;
             _preferenceManager.Save();
-        }
-
-        private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isInitializing) return;
-            _preferenceManager.Preferences.Theme = (Theme)ThemeComboBox.SelectedIndex;
-            SaveSettings();
         }
 
         private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

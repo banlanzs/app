@@ -39,26 +39,34 @@ namespace Stratum.Desktop.Services
                 return;
             }
 
-            var newDictionary = new ResourceDictionary
+            try
             {
-                Source = new Uri(resourcePath, UriKind.Relative)
-            };
+                var newDictionary = new ResourceDictionary
+                {
+                    Source = new Uri(resourcePath, UriKind.Relative)
+                };
 
-            // Find and remove existing language dictionary
-            var existingDict = app.Resources.MergedDictionaries
-                .FirstOrDefault(d => d.Source != null &&
-                    (d.Source.OriginalString.Contains("Strings.en.xaml") ||
-                     d.Source.OriginalString.Contains("Strings.zh.xaml")));
+                // Find and remove existing language dictionary
+                var existingDict = app.Resources.MergedDictionaries
+                    .FirstOrDefault(d => d.Source != null &&
+                        (d.Source.OriginalString.Contains("Strings.en.xaml") ||
+                         d.Source.OriginalString.Contains("Strings.zh.xaml")));
 
-            if (existingDict != null)
-            {
-                _log.Information("Removing existing language dictionary: {Path}", existingDict.Source?.OriginalString);
-                app.Resources.MergedDictionaries.Remove(existingDict);
+                if (existingDict != null)
+                {
+                    _log.Information("Removing existing language dictionary: {Path}", existingDict.Source?.OriginalString);
+                    app.Resources.MergedDictionaries.Remove(existingDict);
+                }
+
+                app.Resources.MergedDictionaries.Add(newDictionary);
+                CurrentLanguage = language;
+                _log.Information("Language set successfully to {Language} using {Path}", language, resourcePath);
             }
-
-            app.Resources.MergedDictionaries.Add(newDictionary);
-            CurrentLanguage = language;
-            _log.Information("Language set successfully to {Language} using {Path}", language, resourcePath);
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to set language to {Language}", language);
+                throw;
+            }
         }
 
         public static string GetString(string key)

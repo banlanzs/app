@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Threading;
 using Autofac;
 using Serilog;
 using Stratum.Desktop.Persistence;
@@ -33,15 +34,19 @@ namespace Stratum.Desktop
                 Database = new Database();
                 Container = Dependencies.Build(Database);
 
-                // Initialize localization
-                var prefManager = Container.Resolve<PreferenceManager>();
-                var locManager = Container.Resolve<LocalizationManager>();
-                locManager.SetLanguage(prefManager.Preferences.Language);
+                // Load resources first before initializing services
+                LoadApplicationResources();
 
                 await Database.OpenAsync(null, Database.Origin.Application);
 
                 var mainWindow = new MainWindow();
                 mainWindow.Show();
+
+                // Initialize localization after window is shown to avoid WPF theme issues
+                var prefManager = Container.Resolve<PreferenceManager>();
+                var locManager = Container.Resolve<LocalizationManager>();
+                
+                locManager.SetLanguage(prefManager.Preferences.Language);
             }
             catch (Exception ex)
             {
@@ -52,6 +57,33 @@ namespace Stratum.Desktop
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 Shutdown(1);
+            }
+        }
+
+        private void LoadApplicationResources()
+        {
+            try
+            {
+                // Load styles and animations
+                var stylesDict = new ResourceDictionary
+                {
+                    Source = new Uri("Resources/Styles.xaml", UriKind.Relative)
+                };
+                
+                var animationsDict = new ResourceDictionary
+                {
+                    Source = new Uri("Resources/Animations.xaml", UriKind.Relative)
+                };
+
+                Resources.MergedDictionaries.Add(animationsDict);
+                Resources.MergedDictionaries.Add(stylesDict);
+                
+                Log.Information("Application resources loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to load application resources");
+                throw;
             }
         }
 

@@ -4,12 +4,6 @@
              xmlns:converters="clr-namespace:Stratum.Desktop.Converters">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Resources/Colors.Light.xaml" />
-                <ResourceDictionary Source="Resources/Animations.xaml" />
-                <ResourceDictionary Source="Resources/Styles.xaml" />
-                <!-- Language dictionary loaded dynamically in App.xaml.cs based on user preferences -->
-            </ResourceDictionary.MergedDictionaries>
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
             <converters:ImageVisibilityConverter x:Key="ImageVisibilityConverter"/>

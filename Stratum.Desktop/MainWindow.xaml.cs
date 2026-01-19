@@ -41,6 +41,9 @@ namespace Stratum.Desktop
         {
             await _viewModel.InitializeAsync();
 
+            // Apply initial sorting based on preferences
+            ApplyInitialSorting();
+
             InitializeTrayIcon();
 
             // Load Home panel by default
@@ -49,6 +52,29 @@ namespace Stratum.Desktop
             if (_preferenceManager.Preferences.StartMinimized)
             {
                 HideToTray();
+            }
+        }
+
+        private void ApplyInitialSorting()
+        {
+            try
+            {
+                var sortMode = _preferenceManager.Preferences.SortMode;
+                var sortType = sortMode switch
+                {
+                    SortMode.AlphabeticalAscending => "NameAsc",
+                    SortMode.AlphabeticalDescending => "NameDesc",
+                    SortMode.CopyCountDescending => "CopyCountDesc",
+                    SortMode.Custom => "Custom",
+                    _ => "Custom"
+                };
+                
+                _viewModel.SortAuthenticators(sortType);
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't crash the app
+                System.Diagnostics.Debug.WriteLine($"Failed to apply initial sorting: {ex.Message}");
             }
         }
 
@@ -66,8 +92,9 @@ namespace Stratum.Desktop
                     NavigateToCategories();
                     break;
                 case "Search":
-                    // Handle search functionality
-                    NavigateToHome(); // For now, just go to home
+                    // Focus on search box in home panel
+                    NavigateToHome();
+                    FocusSearchBox();
                     break;
                 case "Add":
                     // Handle add authenticator
