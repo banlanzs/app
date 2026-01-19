@@ -1,0 +1,128 @@
+<Window x:Class="Stratum.Desktop.Views.CategoryAssignmentDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="{DynamicResource AssignCategory}"
+        Height="500" Width="380"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource BackgroundBrush}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Text="{DynamicResource AssignCategory}" 
+                   Style="{StaticResource TitleLargeStyle}" Margin="0,0,0,16"/>
+
+        <!-- Authenticator Info - Compact -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,16" Padding="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Icon - Smaller -->
+                <Border Grid.Column="0" Width="28" Height="28" CornerRadius="14"
+                        Background="{StaticResource PrimaryBrush}" Margin="0,0,8,0">
+                    <TextBlock x:Name="AuthenticatorIcon" 
+                               FontSize="14" FontWeight="Medium"
+                               Foreground="White"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Info - Compact -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="AuthenticatorIssuer" Style="{StaticResource BodyLargeStyle}" FontWeight="Medium"/>
+                    <TextBlock x:Name="AuthenticatorUsername" Style="{StaticResource LabelStyle}" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Category List - Expanded -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Header -->
+                <TextBlock Grid.Row="0" Text="{DynamicResource SelectCategories}" Style="{StaticResource BodyLargeStyle}" 
+                           FontWeight="Medium" Margin="16,12,16,8"/>
+                
+                <!-- Scrollable List -->
+                <ScrollViewer Grid.Row="1" 
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              CanContentScroll="True"
+                              PanningMode="VerticalOnly">
+                    <ListBox x:Name="CategoriesListBox"
+                             SelectionMode="Multiple"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             ScrollViewer.CanContentScroll="False">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="16,6" MinHeight="36">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox Grid.Column="0" 
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Grid.Column="1" 
+                                               Text="{Binding Name}" 
+                                               VerticalAlignment="Center" 
+                                               Style="{StaticResource BodyStyle}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="Border" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Border" Property="Background" Value="{StaticResource SurfaceVariantBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="{DynamicResource Cancel}"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Width="80" Margin="0,0,8,0"
+                    Click="CancelButton_Click"/>
+            <Button Content="{DynamicResource Save}"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Width="80"
+                    Click="SaveButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

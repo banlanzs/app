@@ -15,30 +15,40 @@
 
         <!-- Header -->
         <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1"
-                Padding="16,12">
+                BorderBrush="{StaticResource OutlineVariantBrush}" BorderThickness="0,0,0,1"
+                Padding="16,16,16,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Search Box -->
-                <TextBox x:Name="SearchBox" Grid.Column="0"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource SearchTextBoxStyle}"
-                         Margin="0,0,12,0">
-                    <TextBox.InputBindings>
-                        <KeyBinding Key="Escape" Command="{Binding ClearSearchCommand}"/>
-                    </TextBox.InputBindings>
-                </TextBox>
+                <!-- Title and Category Filter -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="All" 
+                               Style="{StaticResource TitleLargeStyle}"
+                               Margin="0,0,0,4"/>
+                </StackPanel>
 
-                <!-- Category Filter -->
-                <ComboBox Grid.Column="1"
-                          ItemsSource="{Binding Categories}"
-                          SelectedItem="{Binding SelectedCategory}"
-                          DisplayMemberPath="Name"
-                          Style="{StaticResource CategoryComboBoxStyle}"/>
+                <!-- Menu Button with Sort Options -->
+                <Button Grid.Column="1"
+                        x:Name="SortMenuButton"
+                        Style="{StaticResource IconButtonStyle}"
+                        Click="SortMenuButton_Click"
+                        ToolTip="Sort options">
+                    <TextBlock Text="&#x2630;" FontSize="20"/>
+                    <Button.ContextMenu>
+                        <ContextMenu x:Name="SortContextMenu">
+                            <MenuItem Header="{DynamicResource SortByNameAsc}" Click="SortByNameAsc_Click"/>
+                            <MenuItem Header="{DynamicResource SortByNameDesc}" Click="SortByNameDesc_Click"/>
+                            <Separator/>
+                            <MenuItem Header="{DynamicResource SortByCopyCountAsc}" Click="SortByCopyCountAsc_Click"/>
+                            <MenuItem Header="{DynamicResource SortByCopyCountDesc}" Click="SortByCopyCountDesc_Click"/>
+                            <Separator/>
+                            <MenuItem Header="{DynamicResource SortCustomOrder}" Click="SortCustom_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
             </Grid>
         </Border>
 
@@ -53,13 +63,21 @@
                  VirtualizingPanel.VirtualizationMode="Recycling"
                  ItemContainerStyle="{StaticResource AuthenticatorListItemStyle}"
                  VirtualizingPanel.CacheLength="2"
-                 VirtualizingPanel.CacheLengthUnit="Item">
+                 VirtualizingPanel.CacheLengthUnit="Item"
+                 Padding="0,0,0,80">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Style="{StaticResource CardStyle}"
+                    <Border Style="{StaticResource MobileCardStyle}"
                             Margin="16,8,16,0"
                             Cursor="Hand"
+                            MouseLeftButtonDown="AuthenticatorCard_MouseDown"
                             MouseLeftButtonUp="AuthenticatorCard_Click"
+                            MouseMove="AuthenticatorCard_MouseMove"
+                            AllowDrop="True"
+                            Drop="AuthenticatorCard_Drop"
+                            DragEnter="AuthenticatorCard_DragEnter"
+                            DragOver="AuthenticatorCard_DragOver"
+                            DragLeave="AuthenticatorCard_DragLeave"
                             Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         <Border.ContextMenu>
                             <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
@@ -67,6 +85,8 @@
                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 <MenuItem Header="{DynamicResource Edit}" Command="{Binding EditAuthenticatorCommand}"
                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <Separator/>
+                                <MenuItem Header="{DynamicResource AssignCategory}" Click="AssignCategory_Click"/>
                                 <Separator/>
                                 <MenuItem Header="{DynamicResource ShowQRCode}" Command="{Binding ShowQrCodeCommand}"
                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
@@ -78,7 +98,7 @@
 
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="48"/>
+                                <ColumnDefinition Width="56"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
@@ -86,21 +106,21 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="12"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <!-- Icon -->
                             <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
-                                    Width="40" Height="40" CornerRadius="20"
+                                    Width="48" Height="48" CornerRadius="24"
                                     Background="{StaticResource PrimaryBrush}"
-                                    VerticalAlignment="Center" Margin="0,0,12,0">
+                                    VerticalAlignment="Center" Margin="0,0,16,0">
                                 <Grid>
-                                    <Image Source="{Binding IconImage}" Width="24" Height="24"
+                                    <Image Source="{Binding IconImage}" Width="28" Height="28"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"
                                            Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}"/>
                                     <TextBlock Text="{Binding IssuerInitial}"
-                                               FontSize="18" FontWeight="Medium"
+                                               FontSize="20" FontWeight="Medium"
                                                Foreground="White"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}, ConverterParameter=Invert}"/>
@@ -110,18 +130,22 @@
                             <!-- Issuer -->
                             <TextBlock Grid.Column="1" Grid.Row="0"
                                        Text="{Binding Issuer}"
-                                       Style="{StaticResource TitleStyle}"/>
+                                       Style="{StaticResource BodyLargeStyle}"
+                                       FontWeight="Medium"/>
 
                             <!-- Username -->
                             <TextBlock Grid.Column="1" Grid.Row="1"
                                        Text="{Binding Username}"
-                                       Style="{StaticResource SubtitleStyle}"
+                                       Style="{StaticResource BodyStyle}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
                                        Visibility="{Binding HasUsername, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                             <!-- OTP Code -->
                             <TextBlock Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"
                                        Text="{Binding FormattedCode}"
-                                       Style="{StaticResource CodeStyle}"
+                                       FontSize="36" FontWeight="Medium"
+                                       FontFamily="Consolas, SF Mono, Monaco, Courier New"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
                                        Margin="0,8,0,0"/>
 
                             <!-- Timer Progress -->
@@ -139,8 +163,8 @@
 
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding TimeRemaining, StringFormat={}{0}s}"
-                                           Style="{StaticResource SubtitleStyle}"
-                                           Margin="8,0,0,0"
+                                           Style="{StaticResource LabelStyle}"
+                                           Margin="12,0,0,0"
                                            Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                                 <!-- HOTP Refresh Button -->
@@ -149,12 +173,35 @@
                                         Command="{Binding DataContext.IncrementCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Visibility="{Binding IsCounterBased, Converter={StaticResource BoolToVisibilityConverter}}"
-                                        Style="{StaticResource PrimaryButtonStyle}"
-                                        Padding="8,4"/>
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Padding="12,6"/>
                             </Grid>
 
+                            <!-- More Menu Button -->
+                            <Button Grid.Column="2" Grid.Row="0"
+                                    x:Name="MoreMenuButton"
+                                    Style="{StaticResource IconButtonStyle}"
+                                    Width="32" Height="32"
+                                    Click="MoreMenuButton_Click"
+                                    Tag="{Binding}"
+                                    ToolTip="More options">
+                                <TextBlock Text="&#x22EE;" FontSize="16"/>
+                                <Button.ContextMenu>
+                                    <ContextMenu x:Name="AuthenticatorContextMenu">
+                                        <MenuItem Header="{DynamicResource CopyCode}" Click="CopyCode_Click"/>
+                                        <MenuItem Header="{DynamicResource Edit}" Click="EditAuthenticator_Click"/>
+                                        <Separator/>
+                                        <MenuItem Header="{DynamicResource AssignCategory}" Click="AssignCategory_Click"/>
+                                        <Separator/>
+                                        <MenuItem Header="{DynamicResource ShowQRCode}" Click="ShowQrCode_Click"/>
+                                        <Separator/>
+                                        <MenuItem Header="{DynamicResource Delete}" Click="DeleteAuthenticator_Click" Foreground="Red"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+
                             <!-- Copy Indicator -->
-                            <Border Grid.Column="2" Grid.Row="0"
+                            <Border Grid.Column="2" Grid.Row="1"
                                     Visibility="{Binding JustCopied, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Background="{StaticResource SuccessBrush}"
                                     CornerRadius="4" Padding="8,4">
@@ -171,35 +218,12 @@
                     HorizontalAlignment="Center" VerticalAlignment="Center"
                     Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibilityConverter}}">
             <TextBlock Text="{DynamicResource NoAuthenticators}"
-                       Style="{StaticResource HeadlineStyle}"
-                       HorizontalAlignment="Center" Opacity="0.5"/>
+                       Style="{StaticResource TitleLargeStyle}"
+                       HorizontalAlignment="Center" Opacity="0.6"/>
             <TextBlock Text="{DynamicResource AddYourFirst}"
-                       Style="{StaticResource SubtitleStyle}"
-                       HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                       Style="{StaticResource BodyStyle}"
+                       HorizontalAlignment="Center" Margin="0,8,0,0" Opacity="0.6"/>
         </StackPanel>
-
-        <!-- Footer / Add Button -->
-        <Border Grid.Row="2"
-                Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0"
-                Padding="16,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0"
-                           Text="{Binding AuthenticatorCount, StringFormat={}{0} authenticators}"
-                           Style="{StaticResource SubtitleStyle}"
-                           VerticalAlignment="Center"/>
-
-                <Button Grid.Column="1"
-                        Content="{DynamicResource Add}"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        Command="{Binding AddAuthenticatorCommand}"/>
-            </Grid>
-        </Border>
     </Grid>
 </UserControl>
 

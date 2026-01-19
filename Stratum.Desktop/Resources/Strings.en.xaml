@@ -33,6 +33,15 @@
     <system:String x:Key="EditAuthenticator">Edit</system:String>
     <system:String x:Key="ShowQRCode">Show QR Code</system:String>
     <system:String x:Key="DeleteAuthenticator">Delete</system:String>
+    <system:String x:Key="AssignCategory">Assign Category</system:String>
+    <system:String x:Key="SelectCategories">Select Categories:</system:String>
+
+    <!-- Sort Menu -->
+    <system:String x:Key="SortByNameAsc">Sort by Name (A-Z)</system:String>
+    <system:String x:Key="SortByNameDesc">Sort by Name (Z-A)</system:String>
+    <system:String x:Key="SortByCopyCountAsc">Sort by Copy Count (Low to High)</system:String>
+    <system:String x:Key="SortByCopyCountDesc">Sort by Copy Count (High to Low)</system:String>
+    <system:String x:Key="SortCustomOrder">Custom Sort</system:String>
 
     <!-- Add/Edit Authenticator Dialog -->
     <system:String x:Key="Type">Type</system:String>

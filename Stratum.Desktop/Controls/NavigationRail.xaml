@@ -4,109 +4,75 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             Width="80"
+             Height="80"
              Background="{StaticResource SurfaceBrush}">
 
-    <Border BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,1,0">
+    <Border BorderBrush="{StaticResource OutlineVariantBrush}" BorderThickness="0,1,0,0">
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- Logo/Brand Area -->
-            <Border Grid.Row="0" Padding="0,16,0,24">
-                <TextBlock Text="S"
-                           FontSize="32"
-                           FontWeight="Bold"
-                           Foreground="{StaticResource PrimaryBrush}"
-                           HorizontalAlignment="Center"/>
-            </Border>
+            <!-- Settings Button (was Menu) -->
+            <Button x:Name="SettingsButton"
+                    Grid.Column="0"
+                    Style="{StaticResource BottomNavButtonStyle}"
+                    Click="SettingsButton_Click"
+                    ToolTip="{DynamicResource Settings}">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="&#x2699;" FontSize="20" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Settings" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
 
-            <!-- Navigation Items -->
-            <StackPanel Grid.Row="1" VerticalAlignment="Top">
-                <!-- Home -->
-                <RadioButton x:Name="HomeButton"
-                             Style="{StaticResource NavigationButtonStyle}"
-                             GroupName="Navigation"
-                             IsChecked="True"
-                             Click="NavigationButton_Click"
-                             Tag="Home"
-                             ToolTip="{DynamicResource Home}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="&#x1F3E0;" FontSize="24" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Home}" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="70"/>
-                    </StackPanel>
-                </RadioButton>
+            <!-- Search Button -->
+            <Button x:Name="SearchButton"
+                    Grid.Column="1"
+                    Style="{StaticResource BottomNavButtonStyle}"
+                    Click="SearchButton_Click"
+                    ToolTip="Search">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="&#x1F50D;" FontSize="20" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Search" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
 
-                <!-- Settings -->
-                <RadioButton x:Name="SettingsButton"
-                             Style="{StaticResource NavigationButtonStyle}"
-                             GroupName="Navigation"
-                             Click="NavigationButton_Click"
-                             Tag="Settings"
-                             ToolTip="{DynamicResource Settings}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="&#x2699;" FontSize="24" FontFamily="Segoe UI Symbol" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Settings}" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </RadioButton>
+            <!-- FAB Add Button -->
+            <Button x:Name="AddButton"
+                    Grid.Column="2"
+                    Style="{StaticResource FABStyle}"
+                    Click="AddButton_Click"
+                    ToolTip="{DynamicResource Add}">
+                <TextBlock Text="+" FontSize="24" FontWeight="Bold" Foreground="White"/>
+            </Button>
 
-                <!-- Categories -->
-                <RadioButton x:Name="CategoriesButton"
-                             Style="{StaticResource NavigationButtonStyle}"
-                             GroupName="Navigation"
-                             Click="NavigationButton_Click"
-                             Tag="Categories"
-                             ToolTip="{DynamicResource Categories}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="&#x1F4C1;" FontSize="24" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Categories}" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </RadioButton>
+            <!-- Categories Button -->
+            <Button x:Name="CategoriesButton"
+                    Grid.Column="3"
+                    Style="{StaticResource BottomNavButtonStyle}"
+                    Click="CategoriesButton_Click"
+                    ToolTip="{DynamicResource Categories}">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="&#x1F4C1;" FontSize="20" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Categories" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
 
-                <!-- Import -->
-                <RadioButton x:Name="ImportButton"
-                             Style="{StaticResource NavigationButtonStyle}"
-                             GroupName="Navigation"
-                             Click="NavigationButton_Click"
-                             Tag="Import"
-                             ToolTip="{DynamicResource Import}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="&#x1F4E5;" FontSize="24" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Import}" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="70"/>
-                    </StackPanel>
-                </RadioButton>
-
-                <!-- Backup -->
-                <RadioButton x:Name="BackupButton"
-                             Style="{StaticResource NavigationButtonStyle}"
-                             GroupName="Navigation"
-                             Click="NavigationButton_Click"
-                             Tag="Backup"
-                             ToolTip="{DynamicResource Backup}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="&#x1F4BE;" FontSize="24" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Backup}" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="70"/>
-                    </StackPanel>
-                </RadioButton>
-            </StackPanel>
-
-            <!-- About (Bottom) -->
-            <StackPanel Grid.Row="2" VerticalAlignment="Bottom">
-                <RadioButton x:Name="AboutButton"
-                             Style="{StaticResource NavigationButtonStyle}"
-                             GroupName="Navigation"
-                             Click="NavigationButton_Click"
-                             Tag="About"
-                             ToolTip="{DynamicResource About}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="&#x2139;" FontSize="24" FontFamily="Segoe UI Symbol" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource About}" FontSize="10" Margin="0,4,0,0" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="70"/>
-                    </StackPanel>
-                </RadioButton>
-            </StackPanel>
+            <!-- About Button (was More) -->
+            <Button x:Name="AboutButton"
+                    Grid.Column="4"
+                    Style="{StaticResource BottomNavButtonStyle}"
+                    Click="AboutButton_Click"
+                    ToolTip="{DynamicResource About}">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="&#x2139;" FontSize="20" HorizontalAlignment="Center"/>
+                    <TextBlock Text="About" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </Grid>
     </Border>
 </UserControl>

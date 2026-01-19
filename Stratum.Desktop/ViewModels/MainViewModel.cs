@@ -365,6 +365,76 @@ namespace Stratum.Desktop.ViewModels
             SearchText = string.Empty;
         }
 
+        public void SortAuthenticators(string sortType)
+        {
+            try
+            {
+                IEnumerable<AuthenticatorViewModel> sorted = sortType switch
+                {
+                    "NameAsc" => _authenticators.OrderBy(a => a.Issuer).ThenBy(a => a.Username),
+                    "NameDesc" => _authenticators.OrderByDescending(a => a.Issuer).ThenByDescending(a => a.Username),
+                    "CopyCountAsc" => _authenticators.OrderBy(a => a.CopyCount).ThenBy(a => a.Issuer),
+                    "CopyCountDesc" => _authenticators.OrderByDescending(a => a.CopyCount).ThenBy(a => a.Issuer),
+                    "Custom" => _authenticators.OrderBy(a => a.Auth.Ranking).ThenBy(a => a.Issuer),
+                    _ => _authenticators.OrderBy(a => a.Auth.Ranking).ThenBy(a => a.Issuer)
+                };
+
+                var sortedList = sorted.ToList();
+                _authenticators.Clear();
+                
+                foreach (var auth in sortedList)
+                {
+                    _authenticators.Add(auth);
+                }
+
+                ApplyFilter();
+                _log.Information("Sorted authenticators by {SortType}", sortType);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to sort authenticators");
+            }
+        }
+
+        public async void ReorderAuthenticators(AuthenticatorViewModel draggedAuth, AuthenticatorViewModel targetAuth)
+        {
+            try
+            {
+                var draggedIndex = _authenticators.IndexOf(draggedAuth);
+                var targetIndex = _authenticators.IndexOf(targetAuth);
+
+                if (draggedIndex == -1 || targetIndex == -1 || draggedIndex == targetIndex)
+                    return;
+
+                // Remove the dragged item
+                _authenticators.RemoveAt(draggedIndex);
+
+                // Adjust target index if necessary
+                if (draggedIndex < targetIndex)
+                    targetIndex--;
+
+                // Insert at new position
+                _authenticators.Insert(targetIndex, draggedAuth);
+
+                // Update ranking in database
+                for (int i = 0; i < _authenticators.Count; i++)
+                {
+                    _authenticators[i].Auth.Ranking = i;
+                    await _authenticatorRepository.UpdateAsync(_authenticators[i].Auth);
+                }
+
+                ApplyFilter();
+                _log.Information("Reordered authenticator {Issuer} from position {OldIndex} to {NewIndex}", 
+                    draggedAuth.Issuer, draggedIndex, targetIndex);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to reorder authenticators");
+                // Reload authenticators to restore original order
+                await LoadAuthenticatorsAsync();
+            }
+        }
+
         public ICommand AddAuthenticatorCommand { get; private set; }
         public ICommand EditAuthenticatorCommand { get; private set; }
         public ICommand DeleteAuthenticatorCommand { get; private set; }

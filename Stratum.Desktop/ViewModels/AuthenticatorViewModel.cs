@@ -41,6 +41,7 @@ namespace Stratum.Desktop.ViewModels
         public string Icon => Auth.Icon;
         public ImageSource IconImage => _iconResolver.GetIcon(Auth);
         public int Period => Auth.Period;
+        public int CopyCount => Auth.CopyCount;
         public bool IsTimeBased => Auth.Type.GetGenerationMethod() == GenerationMethod.Time;
         public bool IsCounterBased => Auth.Type.GetGenerationMethod() == GenerationMethod.Counter;
         public AuthenticatorType Type => Auth.Type;
@@ -115,6 +116,7 @@ namespace Stratum.Desktop.ViewModels
             OnPropertyChanged(nameof(IssuerInitial));
             OnPropertyChanged(nameof(Icon));
             OnPropertyChanged(nameof(IconImage));
+            OnPropertyChanged(nameof(CopyCount));
         }
 
         public void UpdateCode()

@@ -33,8 +33,17 @@
     <system:String x:Key="EditAuthenticator">编辑</system:String>
     <system:String x:Key="ShowQRCode">显示二维码</system:String>
     <system:String x:Key="DeleteAuthenticator">删除</system:String>
+    <system:String x:Key="AssignCategory">指定分类</system:String>
+    <system:String x:Key="SelectCategories">选择分类:</system:String>
     <system:String x:Key="ConfirmDeleteAuthenticator">删除 {0} 的验证器？</system:String>
     <system:String x:Key="ConfirmDeleteTitle">确认删除</system:String>
+
+    <!-- Sort Menu -->
+    <system:String x:Key="SortByNameAsc">按名称排序 (A-Z)</system:String>
+    <system:String x:Key="SortByNameDesc">按名称排序 (Z-A)</system:String>
+    <system:String x:Key="SortByCopyCountAsc">按复制次数排序 (递增)</system:String>
+    <system:String x:Key="SortByCopyCountDesc">按复制次数排序 (递减)</system:String>
+    <system:String x:Key="SortCustomOrder">自定义排序</system:String>
 
     <!-- Add/Edit Authenticator Dialog -->
     <system:String x:Key="Type">类型</system:String>

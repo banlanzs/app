@@ -7,8 +7,9 @@
         xmlns:controls="clr-namespace:Stratum.Desktop.Controls"
         mc:Ignorable="d"
         Title="{DynamicResource AppName}"
-        Height="600" Width="850"
-        MinHeight="400" MinWidth="600"
+        Height="800" Width="396"
+        MinHeight="600" MinWidth="352"
+        MaxWidth="528"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BackgroundBrush}"
         Icon="pack://application:,,,/Assets/AppIcon.ico">
@@ -20,20 +21,20 @@
     </Window.InputBindings>
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="80"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
-        <!-- Navigation Rail -->
-        <controls:NavigationRail x:Name="NavigationRail"
-                                  Grid.Column="0"
-                                  NavigationChanged="NavigationRail_NavigationChanged"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
         <!-- Content Frame -->
         <Frame x:Name="ContentFrame"
-               Grid.Column="1"
+               Grid.Row="0"
                NavigationUIVisibility="Hidden"
                Background="{StaticResource BackgroundBrush}"/>
+
+        <!-- Bottom Navigation -->
+        <controls:NavigationRail x:Name="NavigationRail"
+                                  Grid.Row="1"
+                                  NavigationChanged="NavigationRail_NavigationChanged"/>
     </Grid>
 </Window>

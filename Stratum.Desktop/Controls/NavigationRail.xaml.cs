@@ -16,37 +16,37 @@ namespace Stratum.Desktop.Controls
             InitializeComponent();
         }
 
-        private void NavigationButton_Click(object sender, RoutedEventArgs e)
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is RadioButton button && button.Tag is string tag)
-            {
-                NavigationChanged?.Invoke(this, tag);
-            }
+            NavigationChanged?.Invoke(this, "Settings");
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Trigger search functionality
+            NavigationChanged?.Invoke(this, "Search");
+        }
+
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Trigger add authenticator
+            NavigationChanged?.Invoke(this, "Add");
+        }
+
+        private void CategoriesButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationChanged?.Invoke(this, "Categories");
+        }
+
+        private void AboutButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationChanged?.Invoke(this, "About");
         }
 
         public void SelectItem(string tag)
         {
-            switch (tag)
-            {
-                case "Home":
-                    HomeButton.IsChecked = true;
-                    break;
-                case "Settings":
-                    SettingsButton.IsChecked = true;
-                    break;
-                case "Categories":
-                    CategoriesButton.IsChecked = true;
-                    break;
-                case "Import":
-                    ImportButton.IsChecked = true;
-                    break;
-                case "Backup":
-                    BackupButton.IsChecked = true;
-                    break;
-                case "About":
-                    AboutButton.IsChecked = true;
-                    break;
-            }
+            // For the new bottom navigation, we don't need to manage checked states
+            // since we're using regular buttons instead of radio buttons
         }
     }
 }

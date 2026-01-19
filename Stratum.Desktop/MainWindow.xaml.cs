@@ -65,14 +65,22 @@ namespace Stratum.Desktop
                 case "Categories":
                     NavigateToCategories();
                     break;
+                case "Search":
+                    // Handle search functionality
+                    NavigateToHome(); // For now, just go to home
+                    break;
+                case "Add":
+                    // Handle add authenticator
+                    _viewModel.AddAuthenticatorCommand.Execute(null);
+                    break;
+                case "About":
+                    NavigateToAbout();
+                    break;
                 case "Import":
                     NavigateToImport();
                     break;
                 case "Backup":
                     NavigateToBackup();
-                    break;
-                case "About":
-                    NavigateToAbout();
                     break;
             }
         }
