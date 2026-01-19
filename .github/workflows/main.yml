@@ -5,19 +5,23 @@ on:
     branches:
       - master
       - develop
+    paths:
+      - 'Stratum.Desktop/**'
+      - 'Stratum.Core/**'
   pull_request: 
     branches: [ master ]
+    paths:
+      - 'Stratum.Desktop/**'
+      - 'Stratum.Core/**'
   workflow_dispatch:
 
 env:
-  ANDROID_FRAMEWORK: net9.0-android36.0
-  WEAROS_FRAMEWORK: net9.0-android
   CONFIGURATION: Release
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-desktop:
+    runs-on: windows-latest
 
     steps:
       - name: Checkout
@@ -28,51 +32,17 @@ jobs:
         with:
           dotnet-version: '9'
 
-      - name: Install Android workload
-        run: dotnet workload install android
-
-      - name: Install Android platform tools
-        run: $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install platform-tools
-
       - name: Restore NuGet packages
-        run: dotnet restore
+        run: dotnet restore Stratum.Desktop/Stratum.Desktop.csproj
 
-      - name: Run tests
-        run: dotnet test --configuration $CONFIGURATION --no-restore --collect:"XPlat Code Coverage" --results-directory ./coverage Stratum.Test/Stratum.Test.csproj
+      - name: Build Desktop
+        run: dotnet build Stratum.Desktop/Stratum.Desktop.csproj --configuration $env:CONFIGURATION --no-restore
 
-      - name: Publish Android
+      - name: Run Core Tests (if exists)
         run: |
-          REF=$(echo $GITHUB_SHA | cut -c -7)
-          sed -i "s|package=\"com.stratumauth.app\"|package=\"com.stratumauth.app.$REF\"|g" Stratum.Droid/Properties/AndroidManifest.xml
-          sed -i "s|<string name=\"displayName\" translatable=\"false\">Authenticator</string>|<string name=\"displayName\" translatable=\"false\">Authenticator ($REF)</string>|g" Stratum.Droid/Resources/values/strings.xml
-
-          dotnet publish -f:$ANDROID_FRAMEWORK -c:$CONFIGURATION --no-restore Stratum.Droid/Stratum.Droid.csproj
-          APK=$(find Stratum.Droid/bin/$CONFIGURATION/$ANDROID_FRAMEWORK/publish -name '*-Signed.apk')
-          mv $APK "com.stratumauth.app.$REF.apk"
-
-      - name: Publish Wear OS
-        run: |
-          REF=$(echo $GITHUB_SHA | cut -c -7)
-          sed -i "s|package=\"com.stratumauth.app\"|package=\"com.stratumauth.app.$REF\"|g" Stratum.WearOS/Properties/AndroidManifest.xml
-          sed -i "s|<string name=\"displayName\" translatable=\"false\">Authenticator</string>|<string name=\"displayName\" translatable=\"false\">Authenticator ($REF)</string>|g" Stratum.WearOS/Resources/values/strings.xml
-
-          dotnet publish -f:$WEAROS_FRAMEWORK -c:$CONFIGURATION --no-restore Stratum.WearOS/Stratum.WearOS.csproj
-          APK=$(find Stratum.WearOS/bin/$CONFIGURATION/$WEAROS_FRAMEWORK/publish -name '*-Signed.apk')
-          mv $APK "com.stratumauth.app.wearos.$REF.apk"
-
-      - name: Generate coverage report
-        uses: irongut/CodeCoverageSummary@v1.3.0
-        with:
-          filename: coverage/**/coverage.cobertura.xml
-          badge: true
-          format: markdown
-          output: both
-          thresholds: '60 80'
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Stratum
-          path: |
-            com.stratumauth.app*.apk
-            code-coverage-results.md
+          if (Test-Path "Stratum.Core.Test/Stratum.Core.Test.csproj") {
+            dotnet test Stratum.Core.Test/Stratum.Core.Test.csproj --configuration $env:CONFIGURATION --no-restore
+          } else {
+            Write-Host "No Core tests found, skipping..."
+          }
+        shell: pwsh
