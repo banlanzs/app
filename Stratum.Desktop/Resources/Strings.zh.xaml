@@ -150,6 +150,7 @@
 
     <!-- Navigation -->
     <system:String x:Key="Home">主页</system:String>
+    <system:String x:Key="List">列表</system:String>
     <system:String x:Key="About">关于</system:String>
     <system:String x:Key="Backup">备份</system:String>
     <system:String x:Key="Import">导入</system:String>

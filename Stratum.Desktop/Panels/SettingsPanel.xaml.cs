@@ -50,7 +50,6 @@ namespace Stratum.Desktop.Panels
             ShowUsernamesCheckBox.IsChecked = prefs.ShowUsernames;
             TapToCopyCheckBox.IsChecked = prefs.TapToCopy;
             MinimizeToTrayCheckBox.IsChecked = prefs.MinimizeToTray;
-            SortModeComboBox.SelectedIndex = (int)prefs.SortMode;
         }
 
         private void SaveSettings()
@@ -88,13 +87,6 @@ namespace Stratum.Desktop.Panels
         {
             if (_isInitializing) return;
             _preferenceManager.Preferences.MinimizeToTray = MinimizeToTrayCheckBox.IsChecked == true;
-            SaveSettings();
-        }
-
-        private void SortModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isInitializing) return;
-            _preferenceManager.Preferences.SortMode = (SortMode)SortModeComboBox.SelectedIndex;
             SaveSettings();
         }
 
@@ -268,12 +260,6 @@ namespace Stratum.Desktop.Panels
         {
             var importDialog = new ImportDialog { Owner = Window.GetWindow(this) };
             importDialog.ShowDialog();
-        }
-
-        private void ManageCategoriesButton_Click(object sender, RoutedEventArgs e)
-        {
-            var categoriesWindow = new CategoriesWindow { Owner = Window.GetWindow(this) };
-            categoriesWindow.ShowDialog();
         }
     }
 }

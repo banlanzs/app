@@ -21,10 +21,10 @@ namespace Stratum.Desktop.Controls
             NavigationChanged?.Invoke(this, "Settings");
         }
 
-        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        private void ListButton_Click(object sender, RoutedEventArgs e)
         {
-            // Trigger search functionality
-            NavigationChanged?.Invoke(this, "Search");
+            // Navigate to home/list view
+            NavigationChanged?.Invoke(this, "List");
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)

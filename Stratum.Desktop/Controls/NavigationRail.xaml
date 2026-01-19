@@ -29,15 +29,15 @@
                 </StackPanel>
             </Button>
 
-            <!-- Search Button -->
-            <Button x:Name="SearchButton"
+            <!-- List Button (was Search) -->
+            <Button x:Name="ListButton"
                     Grid.Column="1"
                     Style="{StaticResource BottomNavButtonStyle}"
-                    Click="SearchButton_Click"
-                    ToolTip="{DynamicResource Search}">
+                    Click="ListButton_Click"
+                    ToolTip="{DynamicResource List}">
                 <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="&#x1F50D;" FontSize="20" HorizontalAlignment="Center"/>
-                    <TextBlock Text="{DynamicResource Search}" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                    <TextBlock Text="&#x1F4CB;" FontSize="20" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource List}" FontSize="10" Margin="0,2,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
 

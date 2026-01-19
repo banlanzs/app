@@ -91,10 +91,9 @@ namespace Stratum.Desktop
                 case "Categories":
                     NavigateToCategories();
                     break;
-                case "Search":
-                    // Focus on search box in home panel
+                case "List":
+                    // Navigate to home/list view
                     NavigateToHome();
-                    FocusSearchBox();
                     break;
                 case "Add":
                     // Handle add authenticator

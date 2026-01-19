@@ -65,24 +65,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- Sorting Section -->
-            <TextBlock Text="{DynamicResource Sorting}" Style="{StaticResource TitleStyle}" Margin="0,24,0,12"/>
-            <Border Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{DynamicResource SortMode}" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="SortModeComboBox" Grid.Column="1" Width="180"
-                              SelectionChanged="SortModeComboBox_SelectionChanged">
-                        <ComboBoxItem Content="{DynamicResource SortAlphaAsc}"/>
-                        <ComboBoxItem Content="{DynamicResource SortAlphaDesc}"/>
-                        <ComboBoxItem Content="{DynamicResource SortCustom}"/>
-                    </ComboBox>
-                </Grid>
-            </Border>
-
             <!-- Backup Section -->
             <TextBlock Text="{DynamicResource BackupAndRestore}" Style="{StaticResource TitleStyle}" Margin="0,24,0,12"/>
             <Border Style="{StaticResource CardStyle}">
@@ -97,14 +79,6 @@
                             HorizontalAlignment="Stretch"
                             Click="ImportButton_Click"/>
                 </StackPanel>
-            </Border>
-
-            <!-- Categories Section -->
-            <TextBlock Text="{DynamicResource Categories}" Style="{StaticResource TitleStyle}" Margin="0,24,0,12"/>
-            <Border Style="{StaticResource CardStyle}">
-                <Button Content="{DynamicResource ManageCategories}" Style="{StaticResource PrimaryButtonStyle}"
-                        HorizontalAlignment="Stretch"
-                        Click="ManageCategoriesButton_Click"/>
             </Border>
         </StackPanel>
     </ScrollViewer>
