@@ -73,6 +73,7 @@ namespace Stratum.Desktop.ViewModels
             OpenSettingsCommand = new RelayCommand(OpenSettings);
             FocusSearchCommand = new RelayCommand(FocusSearch);
             ClearSearchCommand = new RelayCommand(ClearSearch);
+            SelectCategoryCommand = new RelayCommand<Category>(OnSelectCategory);
         }
 
         public async Task InitializeAsync()
@@ -365,6 +366,24 @@ namespace Stratum.Desktop.ViewModels
             SearchText = string.Empty;
         }
 
+        private void OnSelectCategory(Category category)
+        {
+            try
+            {
+                SelectedCategory = category;
+                OnPropertyChanged(nameof(CurrentCategoryName));
+                ApplyFilter();
+                _log.Information("Selected category: {CategoryName}", category?.Name ?? "All");
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to select category");
+                // Reset to default state on error
+                SelectedCategory = null;
+                OnPropertyChanged(nameof(CurrentCategoryName));
+            }
+        }
+
         public void SortAuthenticators(string sortType)
         {
             try
@@ -444,6 +463,7 @@ namespace Stratum.Desktop.ViewModels
         public ICommand OpenSettingsCommand { get; private set; }
         public ICommand FocusSearchCommand { get; private set; }
         public ICommand ClearSearchCommand { get; private set; }
+        public ICommand SelectCategoryCommand { get; private set; }
 
         public ObservableCollection<AuthenticatorViewModel> Authenticators => _authenticators;
         public ObservableCollection<AuthenticatorViewModel> FilteredAuthenticators => _filteredAuthenticators;
@@ -451,6 +471,8 @@ namespace Stratum.Desktop.ViewModels
 
         public int AuthenticatorCount => _authenticators.Count;
         public bool IsEmpty => _authenticators.Count == 0;
+
+        public string CurrentCategoryName => string.IsNullOrEmpty(_selectedCategory?.Name) ? "All" : _selectedCategory.Name;
 
         public string SearchText
         {
@@ -475,6 +497,7 @@ namespace Stratum.Desktop.ViewModels
                 {
                     _selectedCategory = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(CurrentCategoryName));
                     ApplyFilter();
                 }
             }

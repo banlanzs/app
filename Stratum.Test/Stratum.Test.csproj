@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net9.0-windows</TargetFramework>
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <IsPackable>false</IsPackable>
         <LangVersion>13</LangVersion>
+        <UseWPF>true</UseWPF>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.4">
@@ -28,6 +29,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Stratum.Core\Stratum.Core.csproj" />
+        <ProjectReference Include="..\Stratum.Desktop\Stratum.Desktop.csproj" />
     </ItemGroup>
     <ItemGroup>
         <None Update="data\aegis.encrypted.json">

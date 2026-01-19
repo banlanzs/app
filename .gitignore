@@ -341,3 +341,6 @@ settings.json
 
 # Publish output
 publish/
+
+# kiro
+.kiro/

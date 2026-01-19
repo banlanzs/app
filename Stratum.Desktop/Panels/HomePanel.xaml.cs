@@ -5,6 +5,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Stratum.Core.Entity;
 using Stratum.Desktop.ViewModels;
 
 namespace Stratum.Desktop.Panels
@@ -289,6 +290,70 @@ namespace Stratum.Desktop.Panels
             if (DataContext is MainViewModel viewModel)
             {
                 viewModel.SortAuthenticators("Custom");
+            }
+        }
+
+        // Category filter handlers
+        private void CategoryFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && DataContext is MainViewModel viewModel)
+            {
+                // Clear existing menu items
+                CategoryContextMenu.Items.Clear();
+
+                // Add "All" option
+                var allMenuItem = new MenuItem
+                {
+                    Header = "All",
+                    Tag = null
+                };
+                allMenuItem.Click += CategoryMenuItem_Click;
+                if (viewModel.SelectedCategory == null)
+                {
+                    allMenuItem.FontWeight = FontWeights.Bold;
+                }
+                CategoryContextMenu.Items.Add(allMenuItem);
+
+                // Add separator if there are categories
+                if (viewModel.Categories.Count > 1) // Count > 1 because "All" is always included
+                {
+                    CategoryContextMenu.Items.Add(new Separator());
+                }
+
+                // Add category options
+                foreach (var category in viewModel.Categories)
+                {
+                    if (category.Id != null) // Skip the "All" category that's already added
+                    {
+                        var menuItem = new MenuItem
+                        {
+                            Header = category.Name,
+                            Tag = category
+                        };
+                        menuItem.Click += CategoryMenuItem_Click;
+                        
+                        // Highlight selected category
+                        if (viewModel.SelectedCategory?.Id == category.Id)
+                        {
+                            menuItem.FontWeight = FontWeights.Bold;
+                        }
+                        
+                        CategoryContextMenu.Items.Add(menuItem);
+                    }
+                }
+
+                // Show the context menu
+                button.ContextMenu.PlacementTarget = button;
+                button.ContextMenu.IsOpen = true;
+            }
+        }
+
+        private void CategoryMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem && DataContext is MainViewModel viewModel)
+            {
+                var category = menuItem.Tag as Category;
+                viewModel.SelectedCategory = category;
             }
         }
     }
