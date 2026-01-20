@@ -447,12 +447,11 @@
         </Setter>
     </Style>
 
-    <!-- Drop Shadow Effect for Popups and Elevated Elements -->
-    <DropShadowEffect x:Key="DropShadowEffect" 
-                      Color="Black" 
-                      Opacity="0.2" 
-                      BlurRadius="8" 
-                      ShadowDepth="2" 
-                      Direction="270"/>
+    <!-- Lightweight shadow alternative using Border -->
+    <Style x:Key="ElevatedBorderStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="#20000000"/>
+        <Setter Property="BorderThickness" Value="0,0,2,2"/>
+        <Setter Property="Margin" Value="2"/>
+    </Style>
 
 </ResourceDictionary>

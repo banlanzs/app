@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using Autofac;
@@ -28,24 +29,22 @@ namespace Stratum.Desktop
             {
                 InitializeLogging();
                 EnsureDataDirectory();
-
                 SQLitePCL.Batteries_V2.Init();
-
-                Database = new Database();
-                Container = Dependencies.Build(Database);
-
-                // Load resources first before initializing services
-                LoadApplicationResources();
-
-                await Database.OpenAsync(null, Database.Origin.Application);
 
                 var mainWindow = new MainWindow();
                 mainWindow.Show();
 
-                // Initialize localization after window is shown to avoid WPF theme issues
+                await Task.Run(async () =>
+                {
+                    Database = new Database();
+                    Container = Dependencies.Build(Database);
+                    await Database.OpenAsync(null, Database.Origin.Application);
+                });
+
+                await mainWindow.InitializeViewModelAsync();
+
                 var prefManager = Container.Resolve<PreferenceManager>();
                 var locManager = Container.Resolve<LocalizationManager>();
-                
                 locManager.SetLanguage(prefManager.Preferences.Language);
             }
             catch (Exception ex)

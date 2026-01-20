@@ -34,13 +34,13 @@
                AllowsTransparency="True"
                StaysOpen="False"
                PopupAnimation="Slide">
-            <Border Background="{StaticResource SurfaceBrush}" 
-                    BorderBrush="{StaticResource OutlineVariantBrush}" 
+            <Border Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource OutlineVariantBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="0"
                     MinWidth="{Binding ActualWidth, ElementName=FilterToggleButton}"
-                    Effect="{StaticResource DropShadowEffect}">
+                    Style="{StaticResource ElevatedBorderStyle}">
                 <ItemsControl ItemsSource="{Binding Categories, RelativeSource={RelativeSource AncestorType=UserControl}}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

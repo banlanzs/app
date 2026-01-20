@@ -34,3 +34,4 @@ packages/
 # Windows
 Thumbs.db
 Desktop.ini
+.ace-tool/

@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Autofac;
@@ -16,43 +17,42 @@ namespace Stratum.Desktop
 {
     public partial class MainWindow : Window
     {
-        private readonly MainViewModel _viewModel;
-        private readonly PreferenceManager _preferenceManager;
+        private MainViewModel _viewModel;
+        private PreferenceManager _preferenceManager;
         private HomePanel _homePanel;
         private SettingsPanel _settingsPanel;
         private CategoriesPanel _categoriesPanel;
-        private BackupPanel _backupPanel;
-        private AboutPanel _aboutPanel;
         private Forms.NotifyIcon _trayIcon;
         private bool _isExitRequested;
 
         public MainWindow()
         {
             InitializeComponent();
-            _viewModel = App.Container.Resolve<MainViewModel>();
-            _preferenceManager = App.Container.Resolve<PreferenceManager>();
-            DataContext = _viewModel;
             Loaded += MainWindow_Loaded;
             StateChanged += MainWindow_StateChanged;
             Closing += MainWindow_Closing;
         }
 
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        public async Task InitializeViewModelAsync()
         {
+            _viewModel = App.Container.Resolve<MainViewModel>();
+            _preferenceManager = App.Container.Resolve<PreferenceManager>();
+            DataContext = _viewModel;
+
             await _viewModel.InitializeAsync();
 
-            // Apply initial sorting based on preferences
             ApplyInitialSorting();
-
             InitializeTrayIcon();
-
-            // Load Home panel by default
             NavigateToHome();
 
             if (_preferenceManager.Preferences.StartMinimized)
             {
                 HideToTray();
             }
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
         }
 
         private void ApplyInitialSorting()
@@ -140,33 +140,25 @@ namespace Stratum.Desktop
 
         private void NavigateToImport()
         {
-            // Open import dialog for now (will be converted to panel later)
             var importDialog = new Views.ImportDialog
             {
                 Owner = this
             };
             importDialog.ShowDialog();
 
-            // Return to Home
             NavigationRail.SelectItem("Home");
         }
 
         private void NavigateToBackup()
         {
-            if (_backupPanel == null)
-            {
-                _backupPanel = new BackupPanel();
-            }
-            ContentFrame.Navigate(_backupPanel);
+            var backupPanel = new BackupPanel();
+            ContentFrame.Navigate(backupPanel);
         }
 
         private void NavigateToAbout()
         {
-            if (_aboutPanel == null)
-            {
-                _aboutPanel = new AboutPanel();
-            }
-            ContentFrame.Navigate(_aboutPanel);
+            var aboutPanel = new AboutPanel();
+            ContentFrame.Navigate(aboutPanel);
         }
 
         public void FocusSearchBox()

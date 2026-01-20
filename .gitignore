@@ -344,3 +344,10 @@ publish/
 
 # kiro
 .kiro/
+
+# claude
+.ace-tool/
+.claude/
+
+#test
+Stratum.Desktop.PropertyTests/

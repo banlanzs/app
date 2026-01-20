@@ -43,7 +43,49 @@ namespace Stratum.Desktop.Services
                         return cachedCustom;
                     }
 
-                    var customIcon = _customIconRepository.GetAsync(customId).GetAwaiter().GetResult();
+                    return null;
+                }
+                else if (_builtInCache.TryGetValue(iconKey, out var cachedBuiltIn))
+                {
+                    return cachedBuiltIn;
+                }
+            }
+
+            var fallbackIcon = string.IsNullOrEmpty(iconKey) ? "default" : iconKey;
+            var iconData = TryGetBuiltInIconBytes(fallbackIcon) ?? TryGetBuiltInIconBytes("default");
+            if (iconData == null)
+            {
+                return null;
+            }
+
+            var decoded = TryDecodeImage(iconData);
+            if (decoded != null)
+            {
+                _builtInCache[fallbackIcon] = decoded;
+            }
+
+            return decoded;
+        }
+
+        public async Task<ImageSource> GetIconAsync(Authenticator authenticator)
+        {
+            if (authenticator == null)
+            {
+                return null;
+            }
+
+            var iconKey = authenticator.Icon;
+            if (!string.IsNullOrEmpty(iconKey))
+            {
+                if (iconKey.StartsWith(CustomIcon.Prefix))
+                {
+                    var customId = iconKey[1..];
+                    if (_customCache.TryGetValue(customId, out var cachedCustom))
+                    {
+                        return cachedCustom;
+                    }
+
+                    var customIcon = await _customIconRepository.GetAsync(customId);
                     if (customIcon?.Data != null)
                     {
                         var image = TryDecodeImage(customIcon.Data);
