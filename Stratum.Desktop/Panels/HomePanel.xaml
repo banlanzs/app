@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:behaviors="clr-namespace:Stratum.Desktop.Behaviors"
              mc:Ignorable="d"
              Background="{StaticResource BackgroundBrush}">
 
@@ -40,11 +41,15 @@
                 <Button Grid.Row="0" Grid.Column="1"
                         x:Name="CategoryFilterButton"
                         Style="{StaticResource IconButtonStyle}"
+                        Width="Auto"
+                        Padding="12,0"
                         Click="CategoryFilterButton_Click"
                         ToolTip="Filter by category"
                         VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#x1F4C1;" FontSize="16" Margin="0,0,4,0"/>
+                        <Path Data="M20,6h-8l-2-2H4C2.9,4,2.01,4.9,2.01,6L2,18c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8C22,6.9,21.1,6,20,6z"
+                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              Width="18" Height="18" Stretch="Uniform" Margin="0,0,8,0"/>
                         <Path x:Name="FilterDropdownArrow"
                               Data="M0,0 L4,4 L8,0 Z" 
                               Fill="{StaticResource TextSecondaryBrush}"
@@ -68,7 +73,9 @@
                         Style="{StaticResource IconButtonStyle}"
                         Click="SortMenuButton_Click"
                         ToolTip="Sort options">
-                    <TextBlock Text="&#x2630;" FontSize="20"/>
+                    <Path Data="M3,18h6v-2H3V18z M3,6v2h18V6H3z M3,13h12v-2H3V13z"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          Width="20" Height="20" Stretch="Uniform"/>
                     <Button.ContextMenu>
                         <ContextMenu x:Name="SortContextMenu">
                             <MenuItem Header="{DynamicResource SortByNameAsc}" Click="SortByNameAsc_Click"/>
@@ -87,9 +94,9 @@
                         Background="{StaticResource SurfaceVariantBrush}"
                         BorderBrush="{StaticResource OutlineVariantBrush}"
                         BorderThickness="1"
-                        CornerRadius="24"
+                        CornerRadius="8"
                         Margin="0,12,0,0"
-                        Padding="16,8">
+                        Padding="12,6">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -98,12 +105,13 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Search Icon -->
-                        <TextBlock Grid.Column="0"
-                                   Text="&#x1F50D;"
-                                   FontSize="16"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,12,0"/>
+                        <Path Grid.Column="0"
+                              Data="M15.5,14h-.79l-.28-.27C15.41,12.59,16,11.11,16,9.5C16,5.91,13.09,3,9.5,3S3,5.91,3,9.5S5.91,16,9.5,16c1.61,0,3.09-.59,4.23-1.57l.27.28v.79l5,4.99L20.49,19l-4.99-5L15.5,14z M9.5,14C7.01,14,5,11.99,5,9.5S7.01,5,9.5,5S14,7.01,14,9.5S11.99,14,9.5,14z"
+                              Fill="{StaticResource TextSecondaryBrush}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"
+                              VerticalAlignment="Center"
+                              Margin="0,0,12,0"/>
 
                         <!-- Search TextBox -->
                         <TextBox Grid.Column="1"
@@ -111,7 +119,7 @@
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  Background="Transparent"
                                  BorderThickness="0"
-                                 FontSize="16"
+                                 FontSize="14"
                                  Foreground="{StaticResource TextPrimaryBrush}"
                                  VerticalAlignment="Center"
                                  VerticalContentAlignment="Center"
@@ -157,11 +165,13 @@
                         <Button Grid.Column="2"
                                 x:Name="ClearSearchButton"
                                 Style="{StaticResource IconButtonStyle}"
-                                Width="32" Height="32"
+                                Width="28" Height="28"
                                 Click="ClearSearchButton_Click"
                                 Visibility="{Binding SearchText, Converter={StaticResource BoolToVisibilityConverter}}"
                                 ToolTip="Clear search">
-                            <TextBlock Text="&#x2715;" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41z"
+                                  Fill="{StaticResource TextSecondaryBrush}"
+                                  Width="12" Height="12" Stretch="Uniform"/>
                         </Button>
                     </Grid>
                 </Border>
@@ -169,7 +179,8 @@
         </Border>
 
         <!-- Authenticator List -->
-        <ListBox Grid.Row="1"
+        <ListBox x:Name="AuthenticatorList"
+                 Grid.Row="1"
                  ItemsSource="{Binding FilteredAuthenticators}"
                  SelectedItem="{Binding SelectedAuthenticator}"
                  Background="Transparent"
@@ -178,22 +189,19 @@
                  VirtualizingPanel.IsVirtualizing="True"
                  VirtualizingPanel.VirtualizationMode="Recycling"
                  ItemContainerStyle="{StaticResource AuthenticatorListItemStyle}"
-                 VirtualizingPanel.CacheLength="2"
-                 VirtualizingPanel.CacheLengthUnit="Item"
-                 Padding="0,0,0,80">
+                 VirtualizingPanel.CacheLength="1,1"
+                 VirtualizingPanel.CacheLengthUnit="Page"
+                 VirtualizingPanel.ScrollUnit="Pixel"
+                 Padding="0,0,0,80"
+                 behaviors:DragReorderBehavior.IsEnabled="True"
+                 behaviors:DragReorderBehavior.ReorderCommand="{Binding ReorderAuthenticatorsCommand}"
+                 behaviors:DragReorderBehavior.ClickCommand="{Binding CopyCodeCommand}"
+                 AllowDrop="True">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Border Style="{StaticResource MobileCardStyle}"
                             Margin="16,8,16,0"
                             Cursor="Hand"
-                            MouseLeftButtonDown="AuthenticatorCard_MouseDown"
-                            MouseLeftButtonUp="AuthenticatorCard_Click"
-                            MouseMove="AuthenticatorCard_MouseMove"
-                            AllowDrop="True"
-                            Drop="AuthenticatorCard_Drop"
-                            DragEnter="AuthenticatorCard_DragEnter"
-                            DragOver="AuthenticatorCard_DragOver"
-                            DragLeave="AuthenticatorCard_DragLeave"
                             Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         <Border.ContextMenu>
                             <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
@@ -228,7 +236,7 @@
 
                             <!-- Icon -->
                             <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
-                                    Width="48" Height="48" CornerRadius="24"
+                                    Width="44" Height="44" CornerRadius="8"
                                     Background="{StaticResource PrimaryBrush}"
                                     VerticalAlignment="Center" Margin="0,0,16,0">
                                 <Grid>
@@ -259,13 +267,13 @@
                             <!-- OTP Code -->
                             <TextBlock Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"
                                        Text="{Binding FormattedCode}"
-                                       FontSize="36" FontWeight="Medium"
+                                       FontSize="32" FontWeight="Medium"
                                        FontFamily="Consolas, SF Mono, Monaco, Courier New"
                                        Foreground="{StaticResource TextPrimaryBrush}"
-                                       Margin="0,8,0,0"/>
+                                       Margin="0,4,0,0"/>
 
                             <!-- Timer Progress -->
-                            <Grid Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3">
+                            <Grid Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3" Margin="0,8,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
@@ -297,11 +305,13 @@
                             <Button Grid.Column="2" Grid.Row="0"
                                     x:Name="MoreMenuButton"
                                     Style="{StaticResource IconButtonStyle}"
-                                    Width="32" Height="32"
+                                    Width="28" Height="28"
                                     Click="MoreMenuButton_Click"
                                     Tag="{Binding}"
                                     ToolTip="More options">
-                                <TextBlock Text="&#x22EE;" FontSize="16"/>
+                                <Path Data="M12,8c1.1,0,2-0.9,2-2s-0.9-2-2-2-2,0.9-2,2S10.9,8,12,8z M12,10c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,10,12,10z M12,16c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,16,12,16z"
+                                      Fill="{StaticResource TextSecondaryBrush}"
+                                      Width="4" Height="16" Stretch="Uniform"/>
                                 <Button.ContextMenu>
                                     <ContextMenu x:Name="AuthenticatorContextMenu">
                                         <MenuItem Header="{DynamicResource CopyCode}" Click="CopyCode_Click"/>

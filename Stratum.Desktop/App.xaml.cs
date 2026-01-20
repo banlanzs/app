@@ -46,6 +46,15 @@ namespace Stratum.Desktop
                 var prefManager = Container.Resolve<PreferenceManager>();
                 var locManager = Container.Resolve<LocalizationManager>();
                 locManager.SetLanguage(prefManager.Preferences.Language);
+
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(500);
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                    Log.Information("Startup GC completed");
+                });
             }
             catch (Exception ex)
             {

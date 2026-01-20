@@ -12,10 +12,6 @@ namespace Stratum.Desktop.Panels
 {
     public partial class HomePanel : UserControl
     {
-        private bool _isDragging = false;
-        private Point _startPoint;
-        private AuthenticatorViewModel _draggedItem;
-
         public HomePanel()
         {
             InitializeComponent();
@@ -41,110 +37,6 @@ namespace Stratum.Desktop.Panels
             {
                 viewModel.ClearSearchCommand.Execute(null);
                 e.Handled = true;
-            }
-        }
-
-        private void AuthenticatorCard_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                _startPoint = e.GetPosition(null);
-                if (sender is Border border && border.DataContext is AuthenticatorViewModel auth)
-                {
-                    _draggedItem = auth;
-                }
-            }
-        }
-
-        private void AuthenticatorCard_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed && !_isDragging)
-            {
-                Point mousePos = e.GetPosition(null);
-                Vector diff = _startPoint - mousePos;
-
-                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
-                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
-                {
-                    _isDragging = true;
-                    if (sender is Border border && _draggedItem != null)
-                    {
-                        DragDrop.DoDragDrop(border, _draggedItem, DragDropEffects.Move);
-                        _isDragging = false;
-                    }
-                }
-            }
-        }
-
-        private void AuthenticatorCard_Click(object sender, MouseButtonEventArgs e)
-        {
-            // Only handle click if we weren't dragging
-            if (!_isDragging && DataContext is MainViewModel viewModel && sender is Border border)
-            {
-                if (border.DataContext is AuthenticatorViewModel auth)
-                {
-                    viewModel.CopyCodeCommand.Execute(auth);
-                }
-            }
-            _isDragging = false;
-        }
-
-        private void AuthenticatorCard_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(typeof(AuthenticatorViewModel)))
-            {
-                e.Effects = DragDropEffects.Move;
-                // Change background color to indicate drop target
-                if (sender is Border border)
-                {
-                    border.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(227, 242, 253)); // Light blue
-                }
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
-        }
-
-        private void AuthenticatorCard_DragOver(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(typeof(AuthenticatorViewModel)))
-            {
-                e.Effects = DragDropEffects.Move;
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
-        }
-
-        private void AuthenticatorCard_DragLeave(object sender, DragEventArgs e)
-        {
-            // Restore original background when drag leaves
-            if (sender is Border border)
-            {
-                border.ClearValue(Border.BackgroundProperty);
-            }
-        }
-
-        private void AuthenticatorCard_Drop(object sender, DragEventArgs e)
-        {
-            // Restore original background
-            if (sender is Border border)
-            {
-                border.ClearValue(Border.BackgroundProperty); // This will restore the style's background
-            }
-
-            if (e.Data.GetDataPresent(typeof(AuthenticatorViewModel)) && 
-                sender is Border targetBorder &&
-                targetBorder.DataContext is AuthenticatorViewModel targetAuth &&
-                DataContext is MainViewModel viewModel)
-            {
-                var draggedAuth = (AuthenticatorViewModel)e.Data.GetData(typeof(AuthenticatorViewModel));
-                if (draggedAuth != null && draggedAuth != targetAuth)
-                {
-                    viewModel.ReorderAuthenticators(draggedAuth, targetAuth);
-                }
             }
         }
 

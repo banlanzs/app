@@ -21,6 +21,12 @@ using Stratum.Desktop.Services;
 
 namespace Stratum.Desktop.ViewModels
 {
+    public sealed class ReorderRequest
+    {
+        public AuthenticatorViewModel Dragged { get; init; }
+        public AuthenticatorViewModel Target { get; init; }
+    }
+
     public class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         private readonly ILogger _log = Log.ForContext<MainViewModel>();
@@ -74,6 +80,27 @@ namespace Stratum.Desktop.ViewModels
             FocusSearchCommand = new RelayCommand(FocusSearch);
             ClearSearchCommand = new RelayCommand(ClearSearch);
             SelectCategoryCommand = new RelayCommand<Category>(OnSelectCategory);
+            ReorderAuthenticatorsCommand = new RelayCommand<object>(req =>
+            {
+                if (req == null) return;
+
+                // Handle both click (single item) and drag-drop (request object)
+                var reqType = req.GetType();
+                if (reqType.GetProperty("Dragged") != null && reqType.GetProperty("Target") != null)
+                {
+                    var dragged = reqType.GetProperty("Dragged").GetValue(req) as AuthenticatorViewModel;
+                    var target = reqType.GetProperty("Target").GetValue(req) as AuthenticatorViewModel;
+                    if (dragged != null && target != null && !ReferenceEquals(dragged, target))
+                    {
+                        ReorderAuthenticators(dragged, target);
+                    }
+                }
+                else if (req is AuthenticatorViewModel auth)
+                {
+                    // Single click - copy code
+                    CopyCode(auth);
+                }
+            });
         }
 
         public async Task InitializeAsync()
@@ -464,6 +491,7 @@ namespace Stratum.Desktop.ViewModels
         public ICommand FocusSearchCommand { get; private set; }
         public ICommand ClearSearchCommand { get; private set; }
         public ICommand SelectCategoryCommand { get; private set; }
+        public ICommand ReorderAuthenticatorsCommand { get; private set; }
 
         public ObservableCollection<AuthenticatorViewModel> Authenticators => _authenticators;
         public ObservableCollection<AuthenticatorViewModel> FilteredAuthenticators => _filteredAuthenticators;
