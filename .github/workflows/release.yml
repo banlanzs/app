@@ -145,8 +145,9 @@ jobs:
         with:
           files: |
             releases/${{ steps.version.outputs.VERSION }}/Stratum-Windows-x64-${{ steps.version.outputs.VERSION }}.exe
-          token: "${{ secrets.GH_TOKEN }}"
           draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Desktop artifact
         uses: actions/upload-artifact@v4
