@@ -13,6 +13,7 @@ using Stratum.Core.Backup;
 using Stratum.Core.Backup.Encryption;
 using Stratum.Core.Service;
 using Stratum.Desktop.Services;
+using Stratum.Desktop.ViewModels;
 using Stratum.Desktop.Views;
 
 namespace Stratum.Desktop.Panels
@@ -50,6 +51,8 @@ namespace Stratum.Desktop.Panels
             ShowUsernamesCheckBox.IsChecked = prefs.ShowUsernames;
             TapToCopyCheckBox.IsChecked = prefs.TapToCopy;
             MinimizeToTrayCheckBox.IsChecked = prefs.MinimizeToTray;
+            DisplayModeComboBox.SelectedIndex = (int)prefs.DisplayMode;
+            ColumnLayoutComboBox.SelectedIndex = (int)prefs.ColumnLayout;
         }
 
         private void SaveSettings()
@@ -88,6 +91,37 @@ namespace Stratum.Desktop.Panels
             if (_isInitializing) return;
             _preferenceManager.Preferences.MinimizeToTray = MinimizeToTrayCheckBox.IsChecked == true;
             SaveSettings();
+        }
+
+        private void DisplayModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing) return;
+            var mode = (ValidatorDisplayMode)DisplayModeComboBox.SelectedIndex;
+            var mainViewModel = GetMainViewModel();
+            if (mainViewModel != null)
+            {
+                mainViewModel.DisplayMode = mode;
+            }
+            _preferenceManager.Preferences.DisplayMode = mode;
+            SaveSettings();
+        }
+
+        private void ColumnLayoutComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing) return;
+            var layout = (ValidatorColumnLayout)ColumnLayoutComboBox.SelectedIndex;
+            var mainViewModel = GetMainViewModel();
+            if (mainViewModel != null)
+            {
+                mainViewModel.ColumnLayout = layout;
+            }
+            _preferenceManager.Preferences.ColumnLayout = layout;
+            SaveSettings();
+        }
+
+        private MainViewModel GetMainViewModel()
+        {
+            return Application.Current?.MainWindow?.DataContext as MainViewModel;
         }
 
         private async void CreateBackupButton_Click(object sender, RoutedEventArgs e)

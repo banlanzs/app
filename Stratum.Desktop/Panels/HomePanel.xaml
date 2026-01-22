@@ -7,6 +7,247 @@
              mc:Ignorable="d"
              Background="{StaticResource BackgroundBrush}">
 
+    <UserControl.Resources>
+        <!-- Default Template (extracted from inline) -->
+        <DataTemplate x:Key="DefaultAuthenticatorTemplate">
+            <Border Style="{StaticResource MobileCardStyle}"
+                    Margin="16,8,16,0"
+                    Cursor="Hand"
+                    Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <Border.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="{DynamicResource CopyCode}" Command="{Binding CopyCodeCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="{DynamicResource Edit}" Command="{Binding EditAuthenticatorCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <Separator/>
+                        <MenuItem Header="{DynamicResource AssignCategory}" Click="AssignCategory_Click"/>
+                        <Separator/>
+                        <MenuItem Header="{DynamicResource ShowQRCode}" Command="{Binding ShowQrCodeCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <Separator/>
+                        <MenuItem Header="{DynamicResource Delete}" Command="{Binding DeleteAuthenticatorCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Foreground="Red"/>
+                    </ContextMenu>
+                </Border.ContextMenu>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="56"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
+                            Width="44" Height="44" CornerRadius="8"
+                            Background="{StaticResource PrimaryBrush}"
+                            VerticalAlignment="Center" Margin="0,0,16,0">
+                        <Grid>
+                            <Image Source="{Binding IconImage}" Width="28" Height="28"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}"/>
+                            <TextBlock Text="{Binding IssuerInitial}"
+                                       FontSize="20" FontWeight="Medium"
+                                       Foreground="{StaticResource OnPrimaryBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}, ConverterParameter=Invert}"/>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Grid.Column="1" Grid.Row="0"
+                               Text="{Binding Issuer}"
+                               Style="{StaticResource BodyLargeStyle}"
+                               FontWeight="Medium"/>
+
+                    <TextBlock Grid.Column="1" Grid.Row="1"
+                               Text="{Binding Username}"
+                               Style="{StaticResource BodyStyle}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Visibility="{Binding HasUsername, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <TextBlock Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"
+                               Text="{Binding FormattedCode}"
+                               FontSize="32" FontWeight="Medium"
+                               FontFamily="Consolas, SF Mono, Monaco, Courier New"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="0,4,0,0"/>
+
+                    <Grid Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ProgressBar Grid.Column="0"
+                                     Value="{Binding TimeRemaining, Mode=OneWay}"
+                                     Maximum="{Binding Period, Mode=OneWay}"
+                                     Style="{StaticResource TimerProgressStyle}"
+                                     Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding TimeRemaining, StringFormat={}{0}s}"
+                                   Style="{StaticResource LabelStyle}"
+                                   Margin="12,0,0,0"
+                                   Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                        <Button Grid.Column="1"
+                                Content="Refresh"
+                                Command="{Binding DataContext.IncrementCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Visibility="{Binding IsCounterBased, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Padding="12,6"/>
+                    </Grid>
+
+                    <Button Grid.Column="2" Grid.Row="0"
+                            x:Name="MoreMenuButton"
+                            Style="{StaticResource IconButtonStyle}"
+                            Width="28" Height="28"
+                            Click="MoreMenuButton_Click"
+                            Tag="{Binding}"
+                            ToolTip="More options">
+                        <Path Data="M12,8c1.1,0,2-0.9,2-2s-0.9-2-2-2-2,0.9-2,2S10.9,8,12,8z M12,10c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,10,12,10z M12,16c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,16,12,16z"
+                              Fill="{StaticResource TextSecondaryBrush}"
+                              Width="4" Height="16" Stretch="Uniform"/>
+                        <Button.ContextMenu>
+                            <ContextMenu x:Name="AuthenticatorContextMenu">
+                                <MenuItem Header="{DynamicResource CopyCode}" Click="CopyCode_Click"/>
+                                <MenuItem Header="{DynamicResource Edit}" Click="EditAuthenticator_Click"/>
+                                <Separator/>
+                                <MenuItem Header="{DynamicResource AssignCategory}" Click="AssignCategory_Click"/>
+                                <Separator/>
+                                <MenuItem Header="{DynamicResource ShowQRCode}" Click="ShowQrCode_Click"/>
+                                <Separator/>
+                                <MenuItem Header="{DynamicResource Delete}" Click="DeleteAuthenticator_Click" Foreground="Red"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+
+                    <Border Grid.Column="2" Grid.Row="1"
+                            Visibility="{Binding JustCopied, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Background="{StaticResource SuccessBrush}"
+                            CornerRadius="4" Padding="8,4">
+                        <TextBlock Text="{DynamicResource Copied}" Foreground="{StaticResource OnPrimaryBrush}" FontSize="11"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Compact Template -->
+        <DataTemplate x:Key="CompactAuthenticatorTemplate">
+            <Border Style="{StaticResource MobileCardStyle}" Margin="16,4,16,0" Padding="12,8"
+                    Cursor="Hand" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <Border.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="{DynamicResource CopyCode}" Command="{Binding CopyCodeCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="{DynamicResource Edit}" Command="{Binding EditAuthenticatorCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <Separator/>
+                        <MenuItem Header="{DynamicResource ShowQRCode}" Command="{Binding ShowQrCodeCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <Separator/>
+                        <MenuItem Header="{DynamicResource Delete}" Command="{Binding DeleteAuthenticatorCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Foreground="Red"/>
+                    </ContextMenu>
+                </Border.ContextMenu>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="32" Height="32" CornerRadius="6"
+                            Background="{StaticResource PrimaryBrush}" VerticalAlignment="Center">
+                        <Grid>
+                            <Image Source="{Binding IconImage}" Width="20" Height="20"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}"/>
+                            <TextBlock Text="{Binding IssuerInitial}" FontSize="14" FontWeight="Medium"
+                                       Foreground="{StaticResource OnPrimaryBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}, ConverterParameter=Invert}"/>
+                        </Grid>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
+                        <TextBlock Text="{Binding Issuer}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Username}" FontSize="11"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Visibility="{Binding HasUsername, Converter={StaticResource BoolToVisibilityConverter}}"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding FormattedCode}" FontSize="20"
+                                   FontFamily="Consolas, SF Mono, Monaco, Courier New"
+                                   FontWeight="Medium" Margin="0,0,12,0"/>
+                        <TextBlock Text="{Binding TimeRemaining, StringFormat={}{0}s}"
+                                   FontSize="11" VerticalAlignment="Center"
+                                   Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Tile Template -->
+        <DataTemplate x:Key="TileAuthenticatorTemplate">
+            <Border Style="{StaticResource MobileCardStyle}" Margin="8" Padding="16"
+                    Cursor="Hand" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <Border.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="{DynamicResource CopyCode}" Command="{Binding CopyCodeCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <MenuItem Header="{DynamicResource Edit}" Command="{Binding EditAuthenticatorCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <Separator/>
+                        <MenuItem Header="{DynamicResource ShowQRCode}" Command="{Binding ShowQrCodeCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                        <Separator/>
+                        <MenuItem Header="{DynamicResource Delete}" Command="{Binding DeleteAuthenticatorCommand}"
+                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Foreground="Red"/>
+                    </ContextMenu>
+                </Border.ContextMenu>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="12"
+                            Background="{StaticResource PrimaryBrush}"
+                            HorizontalAlignment="Center" Margin="0,0,0,12">
+                        <Grid>
+                            <Image Source="{Binding IconImage}" Width="32" Height="32"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}"/>
+                            <TextBlock Text="{Binding IssuerInitial}" FontSize="24" FontWeight="Medium"
+                                       Foreground="{StaticResource OnPrimaryBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}, ConverterParameter=Invert}"/>
+                        </Grid>
+                    </Border>
+                    <TextBlock Grid.Row="1" Text="{Binding Issuer}"
+                               HorizontalAlignment="Center" TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis" FontWeight="Medium" Margin="0,0,0,8"/>
+                    <TextBlock Grid.Row="2" Text="{Binding FormattedCode}" FontSize="24"
+                               FontFamily="Consolas, SF Mono, Monaco, Courier New"
+                               HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                    <ProgressBar Grid.Row="3" Value="{Binding TimeRemaining, Mode=OneWay}"
+                                 Maximum="{Binding Period, Mode=OneWay}" Height="4"
+                                 Style="{StaticResource TimerProgressStyle}"
+                                 Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -188,7 +429,6 @@
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  VirtualizingPanel.IsVirtualizing="True"
                  VirtualizingPanel.VirtualizationMode="Recycling"
-                 ItemContainerStyle="{StaticResource AuthenticatorListItemStyle}"
                  VirtualizingPanel.CacheLength="1,1"
                  VirtualizingPanel.CacheLengthUnit="Page"
                  VirtualizingPanel.ScrollUnit="Pixel"
@@ -197,146 +437,37 @@
                  behaviors:DragReorderBehavior.ReorderCommand="{Binding ReorderAuthenticatorsCommand}"
                  behaviors:DragReorderBehavior.ClickCommand="{Binding CopyCodeCommand}"
                  AllowDrop="True">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource MobileCardStyle}"
-                            Margin="16,8,16,0"
-                            Cursor="Hand"
-                            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                        <Border.ContextMenu>
-                            <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
-                                <MenuItem Header="{DynamicResource CopyCode}" Command="{Binding CopyCodeCommand}"
-                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                <MenuItem Header="{DynamicResource Edit}" Command="{Binding EditAuthenticatorCommand}"
-                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                <Separator/>
-                                <MenuItem Header="{DynamicResource AssignCategory}" Click="AssignCategory_Click"/>
-                                <Separator/>
-                                <MenuItem Header="{DynamicResource ShowQRCode}" Command="{Binding ShowQrCodeCommand}"
-                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                <Separator/>
-                                <MenuItem Header="{DynamicResource Delete}" Command="{Binding DeleteAuthenticatorCommand}"
-                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Foreground="Red"/>
-                            </ContextMenu>
-                        </Border.ContextMenu>
-
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="56"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="12"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Icon -->
-                            <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
-                                    Width="44" Height="44" CornerRadius="8"
-                                    Background="{StaticResource PrimaryBrush}"
-                                    VerticalAlignment="Center" Margin="0,0,16,0">
-                                <Grid>
-                                    <Image Source="{Binding IconImage}" Width="28" Height="28"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}"/>
-                                    <TextBlock Text="{Binding IssuerInitial}"
-                                               FontSize="20" FontWeight="Medium"
-                                               Foreground="{StaticResource OnPrimaryBrush}"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}, ConverterParameter=Invert}"/>
-                                </Grid>
-                            </Border>
-
-                            <!-- Issuer -->
-                            <TextBlock Grid.Column="1" Grid.Row="0"
-                                       Text="{Binding Issuer}"
-                                       Style="{StaticResource BodyLargeStyle}"
-                                       FontWeight="Medium"/>
-
-                            <!-- Username -->
-                            <TextBlock Grid.Column="1" Grid.Row="1"
-                                       Text="{Binding Username}"
-                                       Style="{StaticResource BodyStyle}"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                       Visibility="{Binding HasUsername, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                            <!-- OTP Code -->
-                            <TextBlock Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"
-                                       Text="{Binding FormattedCode}"
-                                       FontSize="32" FontWeight="Medium"
-                                       FontFamily="Consolas, SF Mono, Monaco, Courier New"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       Margin="0,4,0,0"/>
-
-                            <!-- Timer Progress -->
-                            <Grid Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3" Margin="0,8,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <ProgressBar Grid.Column="0"
-                                             Value="{Binding TimeRemaining, Mode=OneWay}"
-                                             Maximum="{Binding Period, Mode=OneWay}"
-                                             Style="{StaticResource TimerProgressStyle}"
-                                             Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding TimeRemaining, StringFormat={}{0}s}"
-                                           Style="{StaticResource LabelStyle}"
-                                           Margin="12,0,0,0"
-                                           Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                                <!-- HOTP Refresh Button -->
-                                <Button Grid.Column="1"
-                                        Content="Refresh"
-                                        Command="{Binding DataContext.IncrementCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        Visibility="{Binding IsCounterBased, Converter={StaticResource BoolToVisibilityConverter}}"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Padding="12,6"/>
-                            </Grid>
-
-                            <!-- More Menu Button -->
-                            <Button Grid.Column="2" Grid.Row="0"
-                                    x:Name="MoreMenuButton"
-                                    Style="{StaticResource IconButtonStyle}"
-                                    Width="28" Height="28"
-                                    Click="MoreMenuButton_Click"
-                                    Tag="{Binding}"
-                                    ToolTip="More options">
-                                <Path Data="M12,8c1.1,0,2-0.9,2-2s-0.9-2-2-2-2,0.9-2,2S10.9,8,12,8z M12,10c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,10,12,10z M12,16c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,16,12,16z"
-                                      Fill="{StaticResource TextSecondaryBrush}"
-                                      Width="4" Height="16" Stretch="Uniform"/>
-                                <Button.ContextMenu>
-                                    <ContextMenu x:Name="AuthenticatorContextMenu">
-                                        <MenuItem Header="{DynamicResource CopyCode}" Click="CopyCode_Click"/>
-                                        <MenuItem Header="{DynamicResource Edit}" Click="EditAuthenticator_Click"/>
-                                        <Separator/>
-                                        <MenuItem Header="{DynamicResource AssignCategory}" Click="AssignCategory_Click"/>
-                                        <Separator/>
-                                        <MenuItem Header="{DynamicResource ShowQRCode}" Click="ShowQrCode_Click"/>
-                                        <Separator/>
-                                        <MenuItem Header="{DynamicResource Delete}" Click="DeleteAuthenticator_Click" Foreground="Red"/>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
-                            </Button>
-
-                            <!-- Copy Indicator -->
-                            <Border Grid.Column="2" Grid.Row="1"
-                                    Visibility="{Binding JustCopied, Converter={StaticResource BoolToVisibilityConverter}}"
-                                    Background="{StaticResource SuccessBrush}"
-                                    CornerRadius="4" Padding="8,4">
-                                <TextBlock Text="{DynamicResource Copied}" Foreground="{StaticResource OnPrimaryBrush}" FontSize="11"/>
-                            </Border>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
+            <ListBox.Style>
+                <Style TargetType="ListBox">
+                    <Setter Property="ItemTemplate" Value="{StaticResource DefaultAuthenticatorTemplate}"/>
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="ItemContainerStyle" Value="{StaticResource AuthenticatorListItemStyle}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DisplayMode}" Value="Compact">
+                            <Setter Property="ItemTemplate" Value="{StaticResource CompactAuthenticatorTemplate}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding DisplayMode}" Value="Tile">
+                            <Setter Property="ItemTemplate" Value="{StaticResource TileAuthenticatorTemplate}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ColumnLayout}" Value="Double">
+                            <Setter Property="ItemsPanel">
+                                <Setter.Value>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2"/>
+                                    </ItemsPanelTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="ItemContainerStyle" Value="{x:Null}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListBox.Style>
         </ListBox>
 
         <!-- Empty State -->

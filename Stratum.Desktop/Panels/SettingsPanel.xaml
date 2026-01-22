@@ -36,6 +36,35 @@
                         <CheckBox x:Name="ShowUsernamesCheckBox" Grid.Column="1" VerticalAlignment="Center"
                                   Checked="ShowUsernamesCheckBox_Changed" Unchecked="ShowUsernamesCheckBox_Changed"/>
                     </Grid>
+
+                    <Grid Margin="0,12,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Display Mode / 显示模式" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="DisplayModeComboBox" Grid.Column="1" Width="150"
+                                  SelectionChanged="DisplayModeComboBox_SelectionChanged"
+                                  AutomationProperties.Name="Display Mode">
+                            <ComboBoxItem Content="Default / 默认"/>
+                            <ComboBoxItem Content="Compact / 紧凑"/>
+                            <ComboBoxItem Content="Tile / 平铺"/>
+                        </ComboBox>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Column Layout / 列布局" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="ColumnLayoutComboBox" Grid.Column="1" Width="150"
+                                  SelectionChanged="ColumnLayoutComboBox_SelectionChanged"
+                                  AutomationProperties.Name="Column Layout">
+                            <ComboBoxItem Content="Single Column / 单列"/>
+                            <ComboBoxItem Content="Double Column / 双列"/>
+                        </ComboBox>
+                    </Grid>
                 </StackPanel>
             </Border>
 

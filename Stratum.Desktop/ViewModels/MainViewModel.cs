@@ -502,6 +502,32 @@ namespace Stratum.Desktop.ViewModels
 
         public string CurrentCategoryName => string.IsNullOrEmpty(_selectedCategory?.Name) ? "All" : _selectedCategory.Name;
 
+        public ValidatorDisplayMode DisplayMode
+        {
+            get => _preferenceManager.Preferences.DisplayMode;
+            set
+            {
+                if (_preferenceManager.Preferences.DisplayMode != value)
+                {
+                    _preferenceManager.Preferences.DisplayMode = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public ValidatorColumnLayout ColumnLayout
+        {
+            get => _preferenceManager.Preferences.ColumnLayout;
+            set
+            {
+                if (_preferenceManager.Preferences.ColumnLayout != value)
+                {
+                    _preferenceManager.Preferences.ColumnLayout = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public string SearchText
         {
             get => _searchText;
