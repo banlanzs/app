@@ -52,7 +52,6 @@ namespace Stratum.Desktop.Panels
             TapToCopyCheckBox.IsChecked = prefs.TapToCopy;
             MinimizeToTrayCheckBox.IsChecked = prefs.MinimizeToTray;
             DisplayModeComboBox.SelectedIndex = (int)prefs.DisplayMode;
-            ColumnLayoutComboBox.SelectedIndex = (int)prefs.ColumnLayout;
         }
 
         private void SaveSettings()
@@ -103,19 +102,6 @@ namespace Stratum.Desktop.Panels
                 mainViewModel.DisplayMode = mode;
             }
             _preferenceManager.Preferences.DisplayMode = mode;
-            SaveSettings();
-        }
-
-        private void ColumnLayoutComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isInitializing) return;
-            var layout = (ValidatorColumnLayout)ColumnLayoutComboBox.SelectedIndex;
-            var mainViewModel = GetMainViewModel();
-            if (mainViewModel != null)
-            {
-                mainViewModel.ColumnLayout = layout;
-            }
-            _preferenceManager.Preferences.ColumnLayout = layout;
             SaveSettings();
         }
 

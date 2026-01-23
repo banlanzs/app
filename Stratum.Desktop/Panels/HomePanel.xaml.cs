@@ -2,19 +2,68 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Serilog;
 using Stratum.Core.Entity;
+using Stratum.Desktop.Behaviors;
 using Stratum.Desktop.ViewModels;
 
 namespace Stratum.Desktop.Panels
 {
     public partial class HomePanel : UserControl
     {
+        private static readonly ILogger _log = Log.ForContext<HomePanel>();
+        private MainViewModel _currentViewModel;
+
         public HomePanel()
         {
             InitializeComponent();
+            DataContextChanged += HomePanel_DataContextChanged;
+        }
+
+        private void HomePanel_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            _log.Information("HomePanel_DataContextChanged: Old = {Old}, New = {New}",
+                e.OldValue?.GetType().Name, e.NewValue?.GetType().Name);
+
+            // Detach from old ViewModel
+            if (_currentViewModel != null)
+            {
+                _currentViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+                _log.Information("Detached PropertyChanged listener from old ViewModel");
+            }
+
+            // Attach to new ViewModel
+            if (e.NewValue is MainViewModel newViewModel)
+            {
+                _currentViewModel = newViewModel;
+                _currentViewModel.PropertyChanged += ViewModel_PropertyChanged;
+                _log.Information("Attached PropertyChanged listener to new ViewModel");
+            }
+            else
+            {
+                _currentViewModel = null;
+            }
+        }
+
+        private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            _log.Debug("ViewModel_PropertyChanged: PropertyName = {PropertyName}", e.PropertyName);
+            if (e.PropertyName == nameof(MainViewModel.DisplayMode))
+            {
+                _log.Information("DisplayMode changed, re-initializing DragReorderBehavior");
+                // Force re-initialization of DragReorderBehavior after DisplayMode changes
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    _log.Debug("Re-initializing DragReorderBehavior");
+                    DragReorderBehavior.SetIsEnabled(AuthenticatorList, false);
+                    DragReorderBehavior.SetIsEnabled(AuthenticatorList, true);
+                    _log.Information("DragReorderBehavior re-initialized");
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            }
         }
 
         public void FocusSearchBox()

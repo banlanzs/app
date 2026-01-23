@@ -15,7 +15,7 @@ using Stratum.Desktop.Services;
 
 namespace Stratum.Desktop.ViewModels
 {
-    public class AuthenticatorViewModel : INotifyPropertyChanged
+    public class AuthenticatorViewModel : INotifyPropertyChanged, IDisposable
     {
         private readonly IconResolver _iconResolver;
         private string _code;
@@ -167,6 +167,13 @@ namespace Stratum.Desktop.ViewModels
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void Dispose()
+        {
+            _copiedFeedbackTokenSource?.Cancel();
+            _copiedFeedbackTokenSource?.Dispose();
+            _copiedFeedbackTokenSource = null;
         }
     }
 }

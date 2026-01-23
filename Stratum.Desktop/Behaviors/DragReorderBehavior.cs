@@ -6,11 +6,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Autofac;
+using Serilog;
+using Stratum.Desktop.Services;
 
 namespace Stratum.Desktop.Behaviors
 {
     public static class DragReorderBehavior
     {
+        private static readonly ILogger _log = Log.ForContext(typeof(DragReorderBehavior));
+
         public static readonly DependencyProperty IsEnabledProperty =
             DependencyProperty.RegisterAttached("IsEnabled", typeof(bool), typeof(DragReorderBehavior),
                 new PropertyMetadata(false, OnIsEnabledChanged));
@@ -44,6 +49,8 @@ namespace Stratum.Desktop.Behaviors
         {
             if (d is not ListBox listBox) return;
 
+            _log.Information("OnIsEnabledChanged: IsEnabled changed from {OldValue} to {NewValue}", e.OldValue, e.NewValue);
+
             if ((bool)e.NewValue)
             {
                 listBox.SetValue(DragStateProperty, new DragState());
@@ -53,6 +60,7 @@ namespace Stratum.Desktop.Behaviors
                 listBox.DragOver += OnDragOver;
                 listBox.Drop += OnDrop;
                 listBox.Unloaded += OnUnloaded;
+                _log.Information("OnIsEnabledChanged: Event handlers attached");
             }
             else
             {
@@ -83,11 +91,16 @@ namespace Stratum.Desktop.Behaviors
         {
             if (sender is not ListBox listBox) return;
             var state = (DragState)listBox.GetValue(DragStateProperty);
-            if (state == null) return;
+            if (state == null)
+            {
+                _log.Warning("OnMouseDown: DragState is null!");
+                return;
+            }
 
             state.StartPoint = e.GetPosition(listBox);
             state.DraggedItem = GetItemUnderMouse(listBox, state.StartPoint);
             state.IsDragging = false;
+            _log.Debug("OnMouseDown: StartPoint = {Point}, DraggedItem = {Item}", state.StartPoint, state.DraggedItem);
         }
 
         private static void OnMouseMove(object sender, MouseEventArgs e)
@@ -118,12 +131,24 @@ namespace Stratum.Desktop.Behaviors
             var state = (DragState)listBox.GetValue(DragStateProperty);
             if (state == null) return;
 
-            if (!state.IsDragging && state.DraggedItem != null)
+            if (!state.IsDragging)
             {
-                var cmd = GetClickCommand(listBox);
-                if (cmd != null && cmd.CanExecute(state.DraggedItem))
+                // Re-perform hit-testing at mouse up position to ensure accuracy
+                Point mousePos = e.GetPosition(listBox);
+                var clickedItem = GetItemUnderMouse(listBox, mousePos);
+                _log.Debug("OnMouseUp: clickedItem = {Item}", clickedItem);
+
+                if (clickedItem != null)
                 {
-                    cmd.Execute(state.DraggedItem);
+                    var cmd = GetClickCommand(listBox);
+                    _log.Debug("OnMouseUp: ClickCommand = {Command}, CanExecute = {CanExecute}",
+                        cmd, cmd?.CanExecute(clickedItem));
+
+                    if (cmd != null && cmd.CanExecute(clickedItem))
+                    {
+                        cmd.Execute(clickedItem);
+                        _log.Information("OnMouseUp: Executed ClickCommand for item");
+                    }
                 }
             }
 

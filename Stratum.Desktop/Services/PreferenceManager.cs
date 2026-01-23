@@ -98,7 +98,6 @@ namespace Stratum.Desktop.Services
         public bool StartMinimized { get; set; } = false;
         public bool StartWithWindows { get; set; } = false;
         public ValidatorDisplayMode DisplayMode { get; set; } = ValidatorDisplayMode.Default;
-        public ValidatorColumnLayout ColumnLayout { get; set; } = ValidatorColumnLayout.Single;
     }
 
     public enum SortMode
@@ -114,11 +113,5 @@ namespace Stratum.Desktop.Services
         Default,
         Compact,
         Tile
-    }
-
-    public enum ValidatorColumnLayout
-    {
-        Single,
-        Double
     }
 }

@@ -319,6 +319,7 @@ namespace Stratum.Desktop.ViewModels
                     await _authenticatorRepository.DeleteAsync(auth.Auth);
                     await _authenticatorCategoryRepository.DeleteAllForAuthenticatorAsync(auth.Auth);
                     _authenticators.Remove(auth);
+                    auth.Dispose();
                     ApplyFilter();
                     OnPropertyChanged(nameof(AuthenticatorCount));
                 }
@@ -510,19 +511,6 @@ namespace Stratum.Desktop.ViewModels
                 if (_preferenceManager.Preferences.DisplayMode != value)
                 {
                     _preferenceManager.Preferences.DisplayMode = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public ValidatorColumnLayout ColumnLayout
-        {
-            get => _preferenceManager.Preferences.ColumnLayout;
-            set
-            {
-                if (_preferenceManager.Preferences.ColumnLayout != value)
-                {
-                    _preferenceManager.Preferences.ColumnLayout = value;
                     OnPropertyChanged();
                 }
             }

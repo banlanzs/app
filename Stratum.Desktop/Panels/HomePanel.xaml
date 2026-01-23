@@ -4,10 +4,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:behaviors="clr-namespace:Stratum.Desktop.Behaviors"
+             xmlns:converters="clr-namespace:Stratum.Desktop.Converters"
              mc:Ignorable="d"
              Background="{StaticResource BackgroundBrush}">
 
     <UserControl.Resources>
+        <!-- Converters -->
+        <converters:IconSizeConverter x:Key="IconSizeConverter"/>
+
         <!-- Default Template (extracted from inline) -->
         <DataTemplate x:Key="DefaultAuthenticatorTemplate">
             <Border Style="{StaticResource MobileCardStyle}"
@@ -46,13 +50,30 @@
                     </Grid.RowDefinitions>
 
                     <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
-                            Width="44" Height="44" CornerRadius="8"
+                            CornerRadius="8"
                             Background="{StaticResource PrimaryBrush}"
                             VerticalAlignment="Center" Margin="0,0,16,0">
+                        <Border.Width>
+                            <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Container"
+                                     Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                        </Border.Width>
+                        <Border.Height>
+                            <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Container"
+                                     Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                        </Border.Height>
                         <Grid>
-                            <Image Source="{Binding IconImage}" Width="28" Height="28"
+                            <Image Source="{Binding IconImage}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}"/>
+                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}">
+                                <Image.Width>
+                                    <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Image"
+                                             Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                </Image.Width>
+                                <Image.Height>
+                                    <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Image"
+                                             Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                </Image.Height>
+                            </Image>
                             <TextBlock Text="{Binding IssuerInitial}"
                                        FontSize="20" FontWeight="Medium"
                                        Foreground="{StaticResource OnPrimaryBrush}"
@@ -64,20 +85,26 @@
                     <TextBlock Grid.Column="1" Grid.Row="0"
                                Text="{Binding Issuer}"
                                Style="{StaticResource BodyLargeStyle}"
-                               FontWeight="Medium"/>
+                               FontWeight="Medium"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding Issuer}"/>
 
                     <TextBlock Grid.Column="1" Grid.Row="1"
                                Text="{Binding Username}"
                                Style="{StaticResource BodyStyle}"
                                Foreground="{StaticResource TextSecondaryBrush}"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding Username}"
                                Visibility="{Binding HasUsername, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                     <TextBlock Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"
                                Text="{Binding FormattedCode}"
-                               FontSize="32" FontWeight="Medium"
+                               FontSize="28" FontWeight="Medium"
                                FontFamily="Consolas, SF Mono, Monaco, Courier New"
                                Foreground="{StaticResource TextPrimaryBrush}"
-                               Margin="0,4,0,0"/>
+                               Margin="0,4,0,0"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding FormattedCode}"/>
 
                     <Grid Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
@@ -133,7 +160,8 @@
                     <Border Grid.Column="2" Grid.Row="1"
                             Visibility="{Binding JustCopied, Converter={StaticResource BoolToVisibilityConverter}}"
                             Background="{StaticResource SuccessBrush}"
-                            CornerRadius="4" Padding="8,4">
+                            CornerRadius="4" Padding="8,4"
+                            IsHitTestVisible="False">
                         <TextBlock Text="{DynamicResource Copied}" Foreground="{StaticResource OnPrimaryBrush}" FontSize="11"/>
                     </Border>
                 </Grid>
@@ -151,6 +179,8 @@
                         <MenuItem Header="{DynamicResource Edit}" Command="{Binding EditAuthenticatorCommand}"
                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
+                        <MenuItem Header="{DynamicResource AssignCategory}" Click="AssignCategory_Click"/>
+                        <Separator/>
                         <MenuItem Header="{DynamicResource ShowQRCode}" Command="{Binding ShowQrCodeCommand}"
                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
@@ -164,12 +194,29 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Width="32" Height="32" CornerRadius="6"
+                    <Border Grid.Column="0" CornerRadius="6"
                             Background="{StaticResource PrimaryBrush}" VerticalAlignment="Center">
+                        <Border.Width>
+                            <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Container"
+                                     Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                        </Border.Width>
+                        <Border.Height>
+                            <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Container"
+                                     Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                        </Border.Height>
                         <Grid>
-                            <Image Source="{Binding IconImage}" Width="20" Height="20"
+                            <Image Source="{Binding IconImage}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}"/>
+                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}">
+                                <Image.Width>
+                                    <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Image"
+                                             Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                </Image.Width>
+                                <Image.Height>
+                                    <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Image"
+                                             Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                </Image.Height>
+                            </Image>
                             <TextBlock Text="{Binding IssuerInitial}" FontSize="14" FontWeight="Medium"
                                        Foreground="{StaticResource OnPrimaryBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -177,11 +224,14 @@
                         </Grid>
                     </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
-                        <TextBlock Text="{Binding Issuer}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Issuer}" FontWeight="Medium"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding Issuer}"/>
                         <TextBlock Text="{Binding Username}" FontSize="11"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Visibility="{Binding HasUsername, Converter={StaticResource BoolToVisibilityConverter}}"
-                                   TextTrimming="CharacterEllipsis"/>
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding Username}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="{Binding FormattedCode}" FontSize="20"
@@ -191,6 +241,15 @@
                                    FontSize="11" VerticalAlignment="Center"
                                    Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     </StackPanel>
+                    <Border Grid.ColumnSpan="3"
+                            Visibility="{Binding JustCopied, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Background="{StaticResource SuccessBrush}"
+                            CornerRadius="4" Padding="6,2"
+                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Margin="0,4,4,0"
+                            IsHitTestVisible="False">
+                        <TextBlock Text="{DynamicResource Copied}" Foreground="{StaticResource OnPrimaryBrush}" FontSize="10"/>
+                    </Border>
                 </Grid>
             </Border>
         </DataTemplate>
@@ -206,6 +265,8 @@
                         <MenuItem Header="{DynamicResource Edit}" Command="{Binding EditAuthenticatorCommand}"
                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
+                        <MenuItem Header="{DynamicResource AssignCategory}" Click="AssignCategory_Click"/>
+                        <Separator/>
                         <MenuItem Header="{DynamicResource ShowQRCode}" Command="{Binding ShowQrCodeCommand}"
                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                         <Separator/>
@@ -219,14 +280,32 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="12"
+                    <Border Grid.Row="0" CornerRadius="12"
                             Background="{StaticResource PrimaryBrush}"
                             HorizontalAlignment="Center" Margin="0,0,0,12">
+                        <Border.Width>
+                            <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Container"
+                                     Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                        </Border.Width>
+                        <Border.Height>
+                            <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Container"
+                                     Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                        </Border.Height>
                         <Grid>
-                            <Image Source="{Binding IconImage}" Width="32" Height="32"
+                            <Image Source="{Binding IconImage}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}"/>
+                                   Visibility="{Binding IconImage, Converter={StaticResource ImageVisibilityConverter}}">
+                                <Image.Width>
+                                    <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Image"
+                                             Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                </Image.Width>
+                                <Image.Height>
+                                    <Binding Converter="{StaticResource IconSizeConverter}" ConverterParameter="Image"
+                                             Path="DataContext.DisplayMode" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                </Image.Height>
+                            </Image>
                             <TextBlock Text="{Binding IssuerInitial}" FontSize="24" FontWeight="Medium"
                                        Foreground="{StaticResource OnPrimaryBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -235,11 +314,29 @@
                     </Border>
                     <TextBlock Grid.Row="1" Text="{Binding Issuer}"
                                HorizontalAlignment="Center" TextAlignment="Center"
-                               TextTrimming="CharacterEllipsis" FontWeight="Medium" Margin="0,0,0,8"/>
-                    <TextBlock Grid.Row="2" Text="{Binding FormattedCode}" FontSize="24"
+                               TextTrimming="CharacterEllipsis" FontWeight="Medium"
+                               ToolTip="{Binding Issuer}"
+                               Margin="0,0,0,8"/>
+                    <TextBlock Grid.Row="2" Text="{Binding Username}"
+                               HorizontalAlignment="Center" TextAlignment="Center"
+                               FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                               TextTrimming="CharacterEllipsis"
+                               Visibility="{Binding HasUsername, Converter={StaticResource BoolToVisibilityConverter}}"
+                               Margin="0,0,0,4"
+                               ToolTip="{Binding Username}"/>
+                    <TextBlock Grid.Row="3" Text="{Binding FormattedCode}" FontSize="24"
                                FontFamily="Consolas, SF Mono, Monaco, Courier New"
                                HorizontalAlignment="Center" Margin="0,0,0,12"/>
-                    <ProgressBar Grid.Row="3" Value="{Binding TimeRemaining, Mode=OneWay}"
+                    <Border Grid.Row="0" Grid.RowSpan="5"
+                            Visibility="{Binding JustCopied, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Background="{StaticResource SuccessBrush}"
+                            CornerRadius="4" Padding="8,4"
+                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Margin="0,8,8,0"
+                            IsHitTestVisible="False">
+                        <TextBlock Text="{DynamicResource Copied}" Foreground="{StaticResource OnPrimaryBrush}" FontSize="10"/>
+                    </Border>
+                    <ProgressBar Grid.Row="4" Value="{Binding TimeRemaining, Mode=OneWay}"
                                  Maximum="{Binding Period, Mode=OneWay}" Height="4"
                                  Style="{StaticResource TimerProgressStyle}"
                                  Visibility="{Binding IsTimeBased, Converter={StaticResource BoolToVisibilityConverter}}"/>
@@ -258,7 +355,7 @@
         <!-- Header -->
         <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource OutlineVariantBrush}" BorderThickness="0,0,0,1"
-                Padding="16,16,16,12">
+                Padding="13,13,13,10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -336,7 +433,7 @@
                         BorderBrush="{StaticResource OutlineVariantBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
-                        Margin="0,12,0,0"
+                        Margin="0,10,0,0"
                         Padding="12,6">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -432,7 +529,7 @@
                  VirtualizingPanel.CacheLength="1,1"
                  VirtualizingPanel.CacheLengthUnit="Page"
                  VirtualizingPanel.ScrollUnit="Pixel"
-                 Padding="0,0,0,80"
+                 Padding="0,0,0,32"
                  behaviors:DragReorderBehavior.IsEnabled="True"
                  behaviors:DragReorderBehavior.ReorderCommand="{Binding ReorderAuthenticatorsCommand}"
                  behaviors:DragReorderBehavior.ClickCommand="{Binding CopyCodeCommand}"
@@ -454,16 +551,6 @@
                         </DataTrigger>
                         <DataTrigger Binding="{Binding DisplayMode}" Value="Tile">
                             <Setter Property="ItemTemplate" Value="{StaticResource TileAuthenticatorTemplate}"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding ColumnLayout}" Value="Double">
-                            <Setter Property="ItemsPanel">
-                                <Setter.Value>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="2"/>
-                                    </ItemsPanelTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Setter Property="ItemContainerStyle" Value="{x:Null}"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
