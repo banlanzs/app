@@ -3,8 +3,12 @@
 
 using System;
 using System.IO;
+using System.IO.Pipes;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Autofac;
 using Serilog;
@@ -15,8 +19,14 @@ namespace Stratum.Desktop
 {
     public partial class App : Application
     {
+        private const string MutexName = "Global\\Stratum.Desktop.SingleInstance";
+        private const string PipeName = "Stratum.Desktop.Activation";
+
         public static IContainer Container { get; private set; }
         public static Database Database { get; private set; }
+
+        private Mutex _singleInstanceMutex;
+        private CancellationTokenSource _pipeCancellation;
 
         protected override async void OnStartup(StartupEventArgs e)
         {
@@ -27,6 +37,16 @@ namespace Stratum.Desktop
 
             try
             {
+                if (!AcquireSingleInstance())
+                {
+                    SignalExistingInstance();
+                    Shutdown(0);
+                    return;
+                }
+
+                _pipeCancellation = new CancellationTokenSource();
+                _ = StartPipeServerAsync(_pipeCancellation.Token);
+
                 InitializeLogging();
                 EnsureDataDirectory();
                 SQLitePCL.Batteries_V2.Init();
@@ -119,6 +139,12 @@ namespace Stratum.Desktop
 
         protected override async void OnExit(ExitEventArgs e)
         {
+            _pipeCancellation?.Cancel();
+            _pipeCancellation?.Dispose();
+
+            _singleInstanceMutex?.ReleaseMutex();
+            _singleInstanceMutex?.Dispose();
+
             if (Database != null)
             {
                 await Database.CloseAsync(Database.Origin.Application);
@@ -161,5 +187,91 @@ namespace Stratum.Desktop
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             return Path.Combine(appData, "Stratum");
         }
+
+        private bool AcquireSingleInstance()
+        {
+            _singleInstanceMutex = new Mutex(true, MutexName, out bool createdNew);
+            return createdNew;
+        }
+
+        private async Task StartPipeServerAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    using var server = new NamedPipeServerStream(
+                        PipeName,
+                        PipeDirection.In,
+                        1,
+                        PipeTransmissionMode.Byte,
+                        PipeOptions.Asynchronous);
+
+                    await server.WaitForConnectionAsync(cancellationToken);
+
+                    if (server.IsConnected)
+                    {
+                        _ = server.ReadByte();
+                        Dispatcher.Invoke(ActivateMainWindow);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Pipe server error");
+                }
+            }
+        }
+
+        private void SignalExistingInstance()
+        {
+            try
+            {
+                using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
+                client.Connect(1000);
+                client.WriteByte(1);
+                client.Flush();
+                Log.Information("Signaled existing instance to activate");
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to signal existing instance");
+            }
+        }
+
+        private void ActivateMainWindow()
+        {
+            var window = MainWindow;
+            if (window == null) return;
+
+            var handle = new WindowInteropHelper(window).Handle;
+            if (handle == IntPtr.Zero) return;
+
+            if (IsIconic(handle))
+            {
+                ShowWindow(handle, SW_RESTORE);
+            }
+
+            SetForegroundWindow(handle);
+            window.Activate();
+            window.Topmost = true;
+            window.Topmost = false;
+
+            Log.Information("Main window activated");
+        }
+
+        private const int SW_RESTORE = 9;
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
     }
 }

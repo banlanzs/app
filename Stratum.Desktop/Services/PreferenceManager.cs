@@ -16,6 +16,8 @@ namespace Stratum.Desktop.Services
         private readonly string _filePath;
         private Preferences _preferences;
 
+        public event EventHandler PreferencesChanged;
+
         public PreferenceManager()
         {
             _filePath = Path.Combine(App.GetDataDirectory(), FileName);
@@ -77,6 +79,8 @@ namespace Stratum.Desktop.Services
                 File.WriteAllText(_filePath, json);
                 _log.Information("Preferences saved to {Path}. Language: {Language}",
                     _filePath, _preferences.Language);
+
+                PreferencesChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {

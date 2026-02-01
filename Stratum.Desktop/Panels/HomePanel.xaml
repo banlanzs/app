@@ -428,7 +428,8 @@
                 </Button>
 
                 <!-- Search Box -->
-                <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                        MinWidth="240"
                         Background="{StaticResource SurfaceVariantBrush}"
                         BorderBrush="{StaticResource OutlineVariantBrush}"
                         BorderThickness="1"

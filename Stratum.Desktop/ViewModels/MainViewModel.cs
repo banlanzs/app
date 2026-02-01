@@ -61,6 +61,8 @@ namespace Stratum.Desktop.ViewModels
             _filteredAuthenticators = new ObservableCollection<AuthenticatorViewModel>();
             _categories = new ObservableCollection<Category>();
 
+            _preferenceManager.PreferencesChanged += OnPreferencesChanged;
+
             _updateTimer = new System.Timers.Timer(1000);
             _updateTimer.Elapsed += UpdateTimer_Elapsed;
             _updateTimer.AutoReset = true;
@@ -335,6 +337,12 @@ namespace Stratum.Desktop.ViewModels
         {
             if (auth == null) return;
 
+            if (!_preferenceManager.Preferences.TapToCopy)
+            {
+                _log.Debug("TapToCopy is disabled, skipping copy for {Issuer}", auth.Issuer);
+                return;
+            }
+
             try
             {
                 Clipboard.SetText(auth.Code);
@@ -355,6 +363,12 @@ namespace Stratum.Desktop.ViewModels
                 Owner = Application.Current.MainWindow
             };
             dialog.ShowDialog();
+        }
+
+        private void OnPreferencesChanged(object sender, EventArgs e)
+        {
+            _log.Information("Preferences changed, notifying DisplayMode property to force UI refresh");
+            OnPropertyChanged(nameof(DisplayMode));
         }
 
         private async void IncrementCounter(AuthenticatorViewModel auth)
@@ -565,6 +579,7 @@ namespace Stratum.Desktop.ViewModels
 
         public void Dispose()
         {
+            _preferenceManager.PreferencesChanged -= OnPreferencesChanged;
             _updateTimer?.Stop();
             _updateTimer?.Dispose();
         }
