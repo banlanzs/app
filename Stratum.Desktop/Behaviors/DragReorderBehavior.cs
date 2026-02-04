@@ -54,17 +54,37 @@ namespace Stratum.Desktop.Behaviors
             if ((bool)e.NewValue)
             {
                 listBox.SetValue(DragStateProperty, new DragState());
-                listBox.PreviewMouseLeftButtonDown += OnMouseDown;
-                listBox.PreviewMouseMove += OnMouseMove;
-                listBox.PreviewMouseLeftButtonUp += OnMouseUp;
-                listBox.DragOver += OnDragOver;
-                listBox.Drop += OnDrop;
+                AttachHandlers(listBox);
+                listBox.Loaded += OnLoaded;
                 listBox.Unloaded += OnUnloaded;
                 _log.Information("OnIsEnabledChanged: Event handlers attached");
             }
             else
             {
                 Detach(listBox);
+            }
+        }
+
+        private static void AttachHandlers(ListBox listBox)
+        {
+            listBox.PreviewMouseLeftButtonDown += OnMouseDown;
+            listBox.PreviewMouseMove += OnMouseMove;
+            listBox.PreviewMouseLeftButtonUp += OnMouseUp;
+            listBox.DragOver += OnDragOver;
+            listBox.Drop += OnDrop;
+        }
+
+        private static void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is ListBox listBox && GetIsEnabled(listBox))
+            {
+                var state = listBox.GetValue(DragStateProperty);
+                if (state == null)
+                {
+                    _log.Information("OnLoaded: Re-initializing DragState and handlers");
+                    listBox.SetValue(DragStateProperty, new DragState());
+                    AttachHandlers(listBox);
+                }
             }
         }
 
@@ -75,6 +95,7 @@ namespace Stratum.Desktop.Behaviors
             listBox.PreviewMouseLeftButtonUp -= OnMouseUp;
             listBox.DragOver -= OnDragOver;
             listBox.Drop -= OnDrop;
+            listBox.Loaded -= OnLoaded;
             listBox.Unloaded -= OnUnloaded;
             listBox.ClearValue(DragStateProperty);
         }

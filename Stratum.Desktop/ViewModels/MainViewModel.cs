@@ -111,13 +111,27 @@ namespace Stratum.Desktop.ViewModels
             {
                 await LoadAuthenticatorsAsync();
                 await LoadCategoriesAsync();
-                _updateTimer.Start();
+
+                // Only start timer if not in silent autostart mode
+                if (!App.IsSilentAutostart)
+                {
+                    _updateTimer.Start();
+                }
             }
             catch (Exception ex)
             {
                 _log.Error(ex, "Failed to initialize MainViewModel");
                 MessageBox.Show(string.Format(LocalizationManager.GetString("LoadFailed"), ex.Message), LocalizationManager.GetString("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        public async Task OnUIVisibleAsync()
+        {
+            if (!_updateTimer.Enabled)
+            {
+                _updateTimer.Start();
+            }
+            await WarmUpIconsAsync();
         }
 
         private async Task LoadAuthenticatorsAsync()
@@ -130,7 +144,7 @@ namespace Stratum.Desktop.ViewModels
                 _authenticators.Add(new AuthenticatorViewModel(auth));
             }
 
-            await WarmUpIconsAsync();
+            // Icon warmup is now deferred to OnUIVisibleAsync()
 
             ApplyFilter();
             OnPropertyChanged(nameof(AuthenticatorCount));

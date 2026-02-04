@@ -24,6 +24,7 @@ namespace Stratum.Desktop
         private CategoriesPanel _categoriesPanel;
         private Forms.NotifyIcon _trayIcon;
         private bool _isExitRequested;
+        private bool _isUiInitialized;
 
         public MainWindow()
         {
@@ -35,20 +36,41 @@ namespace Stratum.Desktop
 
         public async Task InitializeViewModelAsync()
         {
-            _viewModel = App.Container.Resolve<MainViewModel>();
+            await InitializeCoreAsync();
+
+            // Only initialize UI if not in silent autostart mode
+            if (!App.IsSilentAutostart)
+            {
+                await InitializeUIAsync();
+            }
+        }
+
+        private Task InitializeCoreAsync()
+        {
             _preferenceManager = App.Container.Resolve<PreferenceManager>();
-            DataContext = _viewModel;
-
-            await _viewModel.InitializeAsync();
-
-            ApplyInitialSorting();
             InitializeTrayIcon();
-            NavigateToHome();
 
             if (App.IsSilentAutostart || _preferenceManager.Preferences.StartMinimized)
             {
                 HideToTray();
             }
+
+            return Task.CompletedTask;
+        }
+
+        private async Task InitializeUIAsync()
+        {
+            if (_isUiInitialized) return;
+
+            _viewModel = App.Container.Resolve<MainViewModel>();
+            DataContext = _viewModel;
+
+            await _viewModel.InitializeAsync();
+
+            ApplyInitialSorting();
+            NavigateToHome();
+
+            _isUiInitialized = true;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -232,8 +254,20 @@ namespace Stratum.Desktop
             _trayIcon.DoubleClick += (_, __) => ShowFromTray();
         }
 
-        private void ShowFromTray()
+        private async void ShowFromTray()
         {
+            // Initialize UI on first show if not already initialized
+            if (!_isUiInitialized)
+            {
+                await InitializeUIAsync();
+            }
+
+            // Notify ViewModel that UI is now visible
+            if (_viewModel != null)
+            {
+                await _viewModel.OnUIVisibleAsync();
+            }
+
             Show();
             WindowState = WindowState.Normal;
             Activate();
