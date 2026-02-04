@@ -80,6 +80,32 @@
                 </StackPanel>
             </Border>
 
+            <!-- Startup Section -->
+            <TextBlock Text="Startup / 启动" Style="{StaticResource TitleStyle}" Margin="0,24,0,12"/>
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Start with Windows / 开机启动" VerticalAlignment="Center"/>
+                        <CheckBox x:Name="StartWithWindowsCheckBox" Grid.Column="1" VerticalAlignment="Center"
+                                  Checked="StartWithWindowsCheckBox_Changed" Unchecked="StartWithWindowsCheckBox_Changed"/>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Silent startup / 静默启动" VerticalAlignment="Center"/>
+                        <CheckBox x:Name="SilentStartupCheckBox" Grid.Column="1" VerticalAlignment="Center"
+                                  Checked="SilentStartupCheckBox_Changed" Unchecked="SilentStartupCheckBox_Changed"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <!-- Backup Section -->
             <TextBlock Text="{DynamicResource BackupAndRestore}" Style="{StaticResource TitleStyle}" Margin="0,24,0,12"/>
             <Border Style="{StaticResource CardStyle}">

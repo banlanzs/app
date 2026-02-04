@@ -45,7 +45,7 @@ namespace Stratum.Desktop
             InitializeTrayIcon();
             NavigateToHome();
 
-            if (_preferenceManager.Preferences.StartMinimized)
+            if (App.IsSilentAutostart || _preferenceManager.Preferences.StartMinimized)
             {
                 HideToTray();
             }

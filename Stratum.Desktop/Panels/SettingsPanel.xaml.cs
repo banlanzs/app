@@ -25,6 +25,7 @@ namespace Stratum.Desktop.Panels
         private readonly LocalizationManager _localizationManager;
         private readonly IBackupService _backupService;
         private readonly IRestoreService _restoreService;
+        private readonly IStartupService _startupService;
         private bool _isInitializing = true;
 
         public SettingsPanel()
@@ -34,6 +35,7 @@ namespace Stratum.Desktop.Panels
             _localizationManager = App.Container.Resolve<LocalizationManager>();
             _backupService = App.Container.Resolve<IBackupService>();
             _restoreService = App.Container.Resolve<IRestoreService>();
+            _startupService = App.Container.Resolve<IStartupService>();
             Loaded += SettingsPanel_Loaded;
         }
 
@@ -51,6 +53,9 @@ namespace Stratum.Desktop.Panels
             ShowUsernamesCheckBox.IsChecked = prefs.ShowUsernames;
             TapToCopyCheckBox.IsChecked = prefs.TapToCopy;
             MinimizeToTrayCheckBox.IsChecked = prefs.MinimizeToTray;
+            StartWithWindowsCheckBox.IsChecked = prefs.StartWithWindows;
+            SilentStartupCheckBox.IsChecked = prefs.SilentAutostart;
+            SilentStartupCheckBox.IsEnabled = prefs.StartWithWindows;
             DisplayModeComboBox.SelectedIndex = (int)prefs.DisplayMode;
         }
 
@@ -89,6 +94,57 @@ namespace Stratum.Desktop.Panels
         {
             if (_isInitializing) return;
             _preferenceManager.Preferences.MinimizeToTray = MinimizeToTrayCheckBox.IsChecked == true;
+            SaveSettings();
+        }
+
+        private async void StartWithWindowsCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing) return;
+
+            var isEnabled = StartWithWindowsCheckBox.IsChecked == true;
+            _preferenceManager.Preferences.StartWithWindows = isEnabled;
+
+            // Update dependent control state
+            SilentStartupCheckBox.IsEnabled = isEnabled;
+            if (!isEnabled)
+            {
+                SilentStartupCheckBox.IsChecked = false;
+                _preferenceManager.Preferences.SilentAutostart = false;
+            }
+
+            // Update registry
+            try
+            {
+                await _startupService.SetEnabledAsync(isEnabled, _preferenceManager.Preferences.SilentAutostart);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to update startup registry setting");
+            }
+
+            SaveSettings();
+        }
+
+        private async void SilentStartupCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing) return;
+
+            var isSilent = SilentStartupCheckBox.IsChecked == true;
+            _preferenceManager.Preferences.SilentAutostart = isSilent;
+
+            // Update registry if startup is enabled
+            if (_preferenceManager.Preferences.StartWithWindows)
+            {
+                try
+                {
+                    await _startupService.SetEnabledAsync(true, isSilent);
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, "Failed to update startup registry setting for silent mode");
+                }
+            }
+
             SaveSettings();
         }
 

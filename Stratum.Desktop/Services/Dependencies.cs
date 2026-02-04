@@ -59,6 +59,7 @@ namespace Stratum.Desktop.Services
             builder.RegisterType<PreferenceManager>().AsSelf().SingleInstance();
             builder.RegisterType<IconResolver>().AsSelf().SingleInstance();
             builder.RegisterType<LocalizationManager>().AsSelf().SingleInstance();
+            builder.RegisterType<WindowsStartupService>().As<IStartupService>().SingleInstance();
 
             // ViewModels
             builder.RegisterType<MainViewModel>().AsSelf();

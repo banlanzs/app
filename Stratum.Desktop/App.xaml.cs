@@ -21,9 +21,12 @@ namespace Stratum.Desktop
     {
         private const string MutexName = "Global\\Stratum.Desktop.SingleInstance";
         private const string PipeName = "Stratum.Desktop.Activation";
+        private const string AutostartArg = "--autostart";
+        private const string SilentArg = "--silent";
 
         public static IContainer Container { get; private set; }
         public static Database Database { get; private set; }
+        public static bool IsSilentAutostart { get; private set; }
 
         private Mutex _singleInstanceMutex;
         private CancellationTokenSource _pipeCancellation;
@@ -35,11 +38,20 @@ namespace Stratum.Desktop
             DispatcherUnhandledException += App_DispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
+            // Parse command line arguments
+            var isAutostart = Array.Exists(e.Args, arg => string.Equals(arg, AutostartArg, StringComparison.OrdinalIgnoreCase));
+            var isSilent = Array.Exists(e.Args, arg => string.Equals(arg, SilentArg, StringComparison.OrdinalIgnoreCase));
+            IsSilentAutostart = isAutostart && isSilent;
+
             try
             {
                 if (!AcquireSingleInstance())
                 {
-                    SignalExistingInstance();
+                    // Don't signal existing instance if this is a silent autostart
+                    if (!IsSilentAutostart)
+                    {
+                        SignalExistingInstance();
+                    }
                     Shutdown(0);
                     return;
                 }
@@ -52,7 +64,13 @@ namespace Stratum.Desktop
                 SQLitePCL.Batteries_V2.Init();
 
                 var mainWindow = new MainWindow();
-                mainWindow.Show();
+                MainWindow = mainWindow;
+
+                // Only show window if not in silent autostart mode
+                if (!IsSilentAutostart)
+                {
+                    mainWindow.Show();
+                }
 
                 await Task.Run(async () =>
                 {

@@ -101,6 +101,7 @@ namespace Stratum.Desktop.Services
         public bool MinimizeToTray { get; set; } = false;
         public bool StartMinimized { get; set; } = false;
         public bool StartWithWindows { get; set; } = false;
+        public bool SilentAutostart { get; set; } = false;
         public ValidatorDisplayMode DisplayMode { get; set; } = ValidatorDisplayMode.Default;
     }
 
