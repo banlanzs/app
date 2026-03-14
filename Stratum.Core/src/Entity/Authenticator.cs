@@ -10,7 +10,7 @@ using Stratum.Core.Util;
 namespace Stratum.Core.Entity
 {
     [Table("authenticator")]
-    public class Authenticator
+    public class Authenticator : IDisposable
     {
         public const int IssuerMaxLength = 32;
         public const int UsernameMaxLength = 40;
@@ -198,6 +198,12 @@ namespace Stratum.Core.Entity
         public virtual string GetUri()
         {
             return Type == AuthenticatorType.MobileOtp ? GetMotpUri() : GetOtpAuthUri();
+        }
+
+        public void Dispose()
+        {
+            (_generator as IDisposable)?.Dispose();
+            _generator = null;
         }
 
         public virtual void Validate()

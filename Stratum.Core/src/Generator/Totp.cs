@@ -1,6 +1,7 @@
 // Copyright (C) 2022 jmh
 // SPDX-License-Identifier: GPL-3.0-only
 
+using System;
 using System.Buffers.Binary;
 
 namespace Stratum.Core.Generator
@@ -16,7 +17,9 @@ namespace Stratum.Core.Generator
 
         public string Compute(long counter)
         {
-            var material = base.Compute(GetCounterBytes(counter, _period));
+            Span<byte> counterBytes = stackalloc byte[sizeof(long)];
+            BinaryPrimitives.WriteInt64BigEndian(counterBytes, counter / _period);
+            var material = base.Compute(counterBytes);
             return Finalise(material);
         }
 
@@ -24,7 +27,7 @@ namespace Stratum.Core.Generator
         {
             var window = counter / period;
             var bytes = new byte[sizeof(long)];
-            BinaryPrimitives.WriteInt64BigEndian(bytes, window);    
+            BinaryPrimitives.WriteInt64BigEndian(bytes, window);
             return bytes;
         }
 

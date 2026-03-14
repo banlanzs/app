@@ -66,12 +66,6 @@ namespace Stratum.Desktop
                 var mainWindow = new MainWindow();
                 MainWindow = mainWindow;
 
-                // Only show window if not in silent autostart mode
-                if (!IsSilentAutostart)
-                {
-                    mainWindow.Show();
-                }
-
                 await Task.Run(async () =>
                 {
                     Database = new Database();
@@ -79,20 +73,18 @@ namespace Stratum.Desktop
                     await Database.OpenAsync(null, Database.Origin.Application);
                 });
 
+                // Initialize ViewModel before showing window
                 await mainWindow.InitializeViewModelAsync();
 
                 var prefManager = Container.Resolve<PreferenceManager>();
                 var locManager = Container.Resolve<LocalizationManager>();
                 locManager.SetLanguage(prefManager.Preferences.Language);
 
-                _ = Task.Run(async () =>
+                // Only show window after ViewModel is fully initialized
+                if (!IsSilentAutostart)
                 {
-                    await Task.Delay(500);
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-                    GC.Collect();
-                    Log.Information("Startup GC completed");
-                });
+                    mainWindow.Show();
+                }
             }
             catch (Exception ex)
             {

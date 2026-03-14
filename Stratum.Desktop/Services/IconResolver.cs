@@ -15,10 +15,13 @@ namespace Stratum.Desktop.Services
 {
     public class IconResolver
     {
+        private const int MaxCustomCacheSize = 200;
+
         private readonly ILogger _log = Log.ForContext<IconResolver>();
         private readonly ICustomIconRepository _customIconRepository;
         private readonly Dictionary<string, ImageSource> _builtInCache = new();
         private readonly Dictionary<string, ImageSource> _customCache = new();
+        private static readonly Dictionary<string, byte[]> _builtInBytesCache = new();
 
         public IconResolver(ICustomIconRepository customIconRepository)
         {
@@ -91,6 +94,11 @@ namespace Stratum.Desktop.Services
                         var image = TryDecodeImage(customIcon.Data);
                         if (image != null)
                         {
+                            if (_customCache.Count >= MaxCustomCacheSize)
+                            {
+                                _customCache.Clear();
+                            }
+
                             _customCache[customId] = image;
                             return image;
                         }
@@ -158,6 +166,11 @@ namespace Stratum.Desktop.Services
 
         private byte[] TryGetBuiltInIconBytes(string iconName)
         {
+            if (_builtInBytesCache.TryGetValue(iconName, out var cached))
+            {
+                return cached;
+            }
+
             try
             {
                 var uri = new Uri($"pack://application:,,,/Assets/Icons/{iconName}.png", UriKind.Absolute);
@@ -168,8 +181,14 @@ namespace Stratum.Desktop.Services
                 }
 
                 using var ms = new MemoryStream();
-                info.Stream.CopyTo(ms);
-                return ms.ToArray();
+                using (info.Stream)
+                {
+                    info.Stream.CopyTo(ms);
+                }
+
+                var bytes = ms.ToArray();
+                _builtInBytesCache[iconName] = bytes;
+                return bytes;
             }
             catch
             {

@@ -174,6 +174,7 @@ namespace Stratum.Desktop.ViewModels
             _copiedFeedbackTokenSource?.Cancel();
             _copiedFeedbackTokenSource?.Dispose();
             _copiedFeedbackTokenSource = null;
+            Auth?.Dispose();
         }
     }
 }

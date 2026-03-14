@@ -1,6 +1,7 @@
 // Copyright (C) 2022 jmh
 // SPDX-License-Identifier: GPL-3.0-only
 
+using System;
 using System.Buffers.Binary;
 
 namespace Stratum.Core.Generator
@@ -13,7 +14,7 @@ namespace Stratum.Core.Generator
 
         public string Compute(long counter)
         {
-            var counterBytes = new byte[sizeof(long)];
+            Span<byte> counterBytes = stackalloc byte[sizeof(long)];
             BinaryPrimitives.WriteInt64BigEndian(counterBytes, counter);
             var material = base.Compute(counterBytes);
             return Truncate(material);

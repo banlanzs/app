@@ -16,6 +16,12 @@ namespace Stratum.Desktop.Services
         private readonly string _filePath;
         private Preferences _preferences;
 
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
+
         public event EventHandler PreferencesChanged;
 
         public PreferenceManager()
@@ -35,11 +41,7 @@ namespace Stratum.Desktop.Services
                 if (File.Exists(_filePath))
                 {
                     var json = File.ReadAllText(_filePath);
-                    var options = new JsonSerializerOptions
-                    {
-                        Converters = { new JsonStringEnumConverter() }
-                    };
-                    _preferences = JsonSerializer.Deserialize<Preferences>(json, options) ?? new Preferences();
+                    _preferences = JsonSerializer.Deserialize<Preferences>(json, JsonOptions) ?? new Preferences();
                     _log.Information("Preferences loaded successfully. Language: {Language}",
                         _preferences.Language);
                 }
@@ -61,12 +63,7 @@ namespace Stratum.Desktop.Services
         {
             try
             {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    Converters = { new JsonStringEnumConverter() }
-                };
-                var json = JsonSerializer.Serialize(_preferences, options);
+                var json = JsonSerializer.Serialize(_preferences, JsonOptions);
 
                 // Ensure directory exists
                 var directory = Path.GetDirectoryName(_filePath);

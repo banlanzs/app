@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using Stratum.Core.Entity;
 using Stratum.Core.Persistence;
+using Stratum.Desktop.Collections;
 using Stratum.Desktop.Services;
 
 namespace Stratum.Desktop.ViewModels
@@ -36,11 +37,12 @@ namespace Stratum.Desktop.ViewModels
         private readonly PreferenceManager _preferenceManager;
         private readonly System.Timers.Timer _updateTimer;
         private int _updateInProgress;
+        private CancellationTokenSource _searchDebounce;
 
         private string _searchText = "";
         private Category _selectedCategory;
-        private ObservableCollection<AuthenticatorViewModel> _authenticators;
-        private ObservableCollection<AuthenticatorViewModel> _filteredAuthenticators;
+        private RangeObservableCollection<AuthenticatorViewModel> _authenticators;
+        private RangeObservableCollection<AuthenticatorViewModel> _filteredAuthenticators;
         private ObservableCollection<Category> _categories;
         private AuthenticatorViewModel _selectedAuthenticator;
 
@@ -57,8 +59,8 @@ namespace Stratum.Desktop.ViewModels
             _authenticatorCategoryRepository = authenticatorCategoryRepository;
             _preferenceManager = preferenceManager;
 
-            _authenticators = new ObservableCollection<AuthenticatorViewModel>();
-            _filteredAuthenticators = new ObservableCollection<AuthenticatorViewModel>();
+            _authenticators = new RangeObservableCollection<AuthenticatorViewModel>();
+            _filteredAuthenticators = new RangeObservableCollection<AuthenticatorViewModel>();
             _categories = new ObservableCollection<Category>();
 
             _preferenceManager.PreferencesChanged += OnPreferencesChanged;
@@ -84,22 +86,12 @@ namespace Stratum.Desktop.ViewModels
             SelectCategoryCommand = new RelayCommand<Category>(OnSelectCategory);
             ReorderAuthenticatorsCommand = new RelayCommand<object>(req =>
             {
-                if (req == null) return;
-
-                // Handle both click (single item) and drag-drop (request object)
-                var reqType = req.GetType();
-                if (reqType.GetProperty("Dragged") != null && reqType.GetProperty("Target") != null)
+                if (req is ReorderRequest r && !ReferenceEquals(r.Dragged, r.Target))
                 {
-                    var dragged = reqType.GetProperty("Dragged").GetValue(req) as AuthenticatorViewModel;
-                    var target = reqType.GetProperty("Target").GetValue(req) as AuthenticatorViewModel;
-                    if (dragged != null && target != null && !ReferenceEquals(dragged, target))
-                    {
-                        ReorderAuthenticators(dragged, target);
-                    }
+                    ReorderAuthenticators(r.Dragged, r.Target);
                 }
                 else if (req is AuthenticatorViewModel auth)
                 {
-                    // Single click - copy code
                     CopyCode(auth);
                 }
             });
@@ -137,6 +129,11 @@ namespace Stratum.Desktop.ViewModels
         private async Task LoadAuthenticatorsAsync()
         {
             var auths = await _authenticatorRepository.GetAllAsync();
+
+            foreach (var old in _authenticators)
+            {
+                old.Dispose();
+            }
             _authenticators.Clear();
 
             foreach (var auth in auths.OrderBy(a => a.Ranking))
@@ -190,8 +187,28 @@ namespace Stratum.Desktop.ViewModels
 
         private void ApplyFilter()
         {
-            // Run filter asynchronously to avoid UI thread blocking
-            _ = ApplyFilterAsync();
+            DebouncedApplyFilter(0);
+        }
+
+        private async void DebouncedApplyFilter(int delayMs)
+        {
+            _searchDebounce?.Cancel();
+            _searchDebounce = new CancellationTokenSource();
+            var token = _searchDebounce.Token;
+
+            try
+            {
+                if (delayMs > 0)
+                {
+                    await Task.Delay(delayMs, token);
+                }
+
+                if (!token.IsCancellationRequested)
+                {
+                    await ApplyFilterAsync();
+                }
+            }
+            catch (TaskCanceledException) { }
         }
 
         private async Task ApplyFilterAsync()
@@ -216,12 +233,7 @@ namespace Stratum.Desktop.ViewModels
             // Update UI on UI thread
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                _filteredAuthenticators.Clear();
-                foreach (var auth in filtered)
-                {
-                    _filteredAuthenticators.Add(auth);
-                }
-
+                _filteredAuthenticators.ReplaceAll(filtered);
                 OnPropertyChanged(nameof(FilteredAuthenticators));
                 OnPropertyChanged(nameof(IsEmpty));
             });
@@ -455,12 +467,7 @@ namespace Stratum.Desktop.ViewModels
                 };
 
                 var sortedList = sorted.ToList();
-                _authenticators.Clear();
-                
-                foreach (var auth in sortedList)
-                {
-                    _authenticators.Add(auth);
-                }
+                _authenticators.ReplaceAll(sortedList);
 
                 ApplyFilter();
                 _log.Information("Sorted authenticators by {SortType}", sortType);
@@ -491,12 +498,20 @@ namespace Stratum.Desktop.ViewModels
                 // Insert at new position
                 _authenticators.Insert(targetIndex, draggedAuth);
 
-                // Update ranking in database
+                // Update ranking in database using batch transaction
                 for (int i = 0; i < _authenticators.Count; i++)
                 {
                     _authenticators[i].Auth.Ranking = i;
-                    await _authenticatorRepository.UpdateAsync(_authenticators[i].Auth);
                 }
+
+                var conn = await App.Database.GetConnectionAsync();
+                await conn.RunInTransactionAsync(tran =>
+                {
+                    foreach (var auth in _authenticators)
+                    {
+                        tran.Update(auth.Auth);
+                    }
+                });
 
                 ApplyFilter();
                 _log.Information("Reordered authenticator {Issuer} from position {OldIndex} to {NewIndex}", 
@@ -553,7 +568,7 @@ namespace Stratum.Desktop.ViewModels
                 {
                     _searchText = value;
                     OnPropertyChanged();
-                    ApplyFilter();
+                    DebouncedApplyFilter(250);
                 }
             }
         }
@@ -596,6 +611,13 @@ namespace Stratum.Desktop.ViewModels
             _preferenceManager.PreferencesChanged -= OnPreferencesChanged;
             _updateTimer?.Stop();
             _updateTimer?.Dispose();
+            _searchDebounce?.Cancel();
+            _searchDebounce?.Dispose();
+
+            foreach (var auth in _authenticators)
+            {
+                auth.Dispose();
+            }
         }
     }
 }

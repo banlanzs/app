@@ -24,12 +24,17 @@ namespace Stratum.Desktop.Persistence
 
         private readonly ILogger _log = Log.ForContext<Database>();
         private readonly SemaphoreSlim _lock = new(1, 1);
-        private SQLiteAsyncConnection _connection;
+        private volatile SQLiteAsyncConnection _connection;
 
         public async Task<SQLiteAsyncConnection> GetConnectionAsync()
         {
-            await _lock.WaitAsync();
+            var conn = _connection;
+            if (conn != null)
+            {
+                return conn;
+            }
 
+            await _lock.WaitAsync();
             try
             {
                 if (_connection == null)

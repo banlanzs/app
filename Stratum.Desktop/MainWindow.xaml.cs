@@ -22,6 +22,8 @@ namespace Stratum.Desktop
         private HomePanel _homePanel;
         private SettingsPanel _settingsPanel;
         private CategoriesPanel _categoriesPanel;
+        private BackupPanel _backupPanel;
+        private AboutPanel _aboutPanel;
         private Forms.NotifyIcon _trayIcon;
         private bool _isExitRequested;
         private bool _isUiInitialized;
@@ -71,6 +73,9 @@ namespace Stratum.Desktop
             NavigateToHome();
 
             _isUiInitialized = true;
+
+            // Ensure UI is fully ready after initialization
+            await _viewModel.OnUIVisibleAsync();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -173,14 +178,20 @@ namespace Stratum.Desktop
 
         private void NavigateToBackup()
         {
-            var backupPanel = new BackupPanel();
-            ContentFrame.Navigate(backupPanel);
+            if (_backupPanel == null)
+            {
+                _backupPanel = new BackupPanel();
+            }
+            ContentFrame.Navigate(_backupPanel);
         }
 
         private void NavigateToAbout()
         {
-            var aboutPanel = new AboutPanel();
-            ContentFrame.Navigate(aboutPanel);
+            if (_aboutPanel == null)
+            {
+                _aboutPanel = new AboutPanel();
+            }
+            ContentFrame.Navigate(_aboutPanel);
         }
 
         public void FocusSearchBox()
@@ -224,9 +235,10 @@ namespace Stratum.Desktop
             Drawing.Icon icon;
             try
             {
-                var iconStream = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/AppIcon.ico"))?.Stream;
-                if (iconStream != null)
+                var resourceInfo = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/AppIcon.ico"));
+                if (resourceInfo != null)
                 {
+                    using var iconStream = resourceInfo.Stream;
                     icon = new Drawing.Icon(iconStream);
                 }
                 else
@@ -261,11 +273,13 @@ namespace Stratum.Desktop
             {
                 await InitializeUIAsync();
             }
-
-            // Notify ViewModel that UI is now visible
-            if (_viewModel != null)
+            else
             {
-                await _viewModel.OnUIVisibleAsync();
+                // Notify ViewModel that UI is now visible (only if already initialized)
+                if (_viewModel != null)
+                {
+                    await _viewModel.OnUIVisibleAsync();
+                }
             }
 
             Show();
