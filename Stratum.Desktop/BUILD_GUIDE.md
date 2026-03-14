@@ -167,7 +167,7 @@ publish/
    git add releases/v1.0.1
    git commit -m "release: v1.0.1"
    git tag v1.0.1
-   git push origin master --tags
+   git push origin master --tags #git push origin v1.1.8
    ```
 
 5. **Create GitHub Release:**

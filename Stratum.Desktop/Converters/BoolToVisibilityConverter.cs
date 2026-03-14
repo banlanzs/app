@@ -49,4 +49,25 @@ namespace Stratum.Desktop.Converters
             return true;
         }
     }
+
+    /// <summary>
+    /// Converts a string to Visibility - Visible when string is not null or empty, Collapsed otherwise.
+    /// Memory-efficient: no complex binding chains.
+    /// </summary>
+    public class StringNotEmptyToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string str && !string.IsNullOrEmpty(str))
+            {
+                return Visibility.Visible;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
