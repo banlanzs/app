@@ -5,14 +5,33 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Stratum.Desktop.ViewModels"
         xmlns:controls="clr-namespace:Stratum.Desktop.Controls"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         mc:Ignorable="d"
-        Title="{DynamicResource AppName}"
-        Height="800" Width="396"
-        MinHeight="600" MinWidth="352"
-        MaxWidth="528"
+        Title="Stratum Desktop"
+        Height="720" Width="1100"
+        MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BackgroundBrush}"
+        Background="{StaticResource BgBrush}"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
         Icon="pack://application:,,,/Assets/AppIcon.ico">
+
+    <Window.Resources>
+        <Style TargetType="Window">
+            <Setter Property="shell:WindowChrome.WindowChrome">
+                <Setter.Value>
+                    <shell:WindowChrome
+                        CaptionHeight="40"
+                        ResizeBorderThickness="5"
+                        GlassFrameThickness="0"
+                        CornerRadius="0"
+                        UseAeroCaptionButtons="False"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
 
     <Window.InputBindings>
         <KeyBinding Key="F" Modifiers="Ctrl" Command="{Binding FocusSearchCommand}"/>
@@ -22,19 +41,99 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Content Frame -->
-        <Frame x:Name="ContentFrame"
-               Grid.Row="0"
-               NavigationUIVisibility="Hidden"
-               Background="{StaticResource BackgroundBrush}"/>
+        <!-- Custom Title Bar -->
+        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <!-- Bottom Navigation -->
-        <controls:NavigationRail x:Name="NavigationRail"
-                                  Grid.Row="1"
-                                  NavigationChanged="NavigationRail_NavigationChanged"/>
+                <!-- App Icon and Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <Path Data="M3 11h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V11zM7 11V7a5 5 0 0 1 10 0v4"
+                          Stroke="{StaticResource AccentBrush}" StrokeThickness="2"
+                          Fill="Transparent" Width="18" Height="18" Stretch="Uniform"/>
+                    <TextBlock Text="Stratum Desktop" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource FgBrush}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Window Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="MinimizeButton" Width="46" Height="40" Style="{StaticResource IconButtonStyle}"
+                            Click="MinimizeButton_Click" ToolTip="最小化">
+                        <Path Data="M2 7h10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.4" Width="14" Height="14" Stretch="Uniform"/>
+                    </Button>
+                    <Button x:Name="MaximizeButton" Width="46" Height="40" Style="{StaticResource IconButtonStyle}"
+                            Click="MaximizeButton_Click" ToolTip="最大化">
+                        <Path Data="M2 2h10v10H2z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.4" Width="14" Height="14" Stretch="Uniform"/>
+                    </Button>
+                    <Button x:Name="CloseButton" Width="46" Height="40" Style="{StaticResource IconButtonStyle}"
+                            Click="CloseButton_Click" ToolTip="关闭">
+                        <Path Data="M3 3l8 8M11 3l-8 8" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.4" Width="14" Height="14" Stretch="Uniform"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Sidebar -->
+            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="SidebarPanel" Margin="12">
+                            <!-- Sidebar items will be populated dynamically -->
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Sidebar Bottom -->
+                    <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+                            Padding="12" Background="{StaticResource SurfaceBrush}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="12,8">
+                                <Ellipse Width="6" Height="6" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="本地加密存储" FontSize="12" Foreground="{StaticResource MutedBrush}"
+                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button x:Name="SettingsButton" Style="{StaticResource SidebarItemStyle}"
+                                    Click="SettingsButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform" Margin="0,0,12,0"/>
+                                    <TextBlock Text="设置" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Main Content Panel -->
+            <ContentControl x:Name="ContentPanel" Grid.Column="1" Background="{StaticResource BgBrush}"/>
+        </Grid>
     </Grid>
 </Window>

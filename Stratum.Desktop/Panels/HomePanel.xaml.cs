@@ -52,18 +52,6 @@ namespace Stratum.Desktop.Panels
         private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             _log.Debug("ViewModel_PropertyChanged: PropertyName = {PropertyName}", e.PropertyName);
-            if (e.PropertyName == nameof(MainViewModel.DisplayMode))
-            {
-                _log.Information("DisplayMode changed, re-initializing DragReorderBehavior");
-                // Force re-initialization of DragReorderBehavior after DisplayMode changes
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    _log.Debug("Re-initializing DragReorderBehavior");
-                    DragReorderBehavior.SetIsEnabled(AuthenticatorList, false);
-                    DragReorderBehavior.SetIsEnabled(AuthenticatorList, true);
-                    _log.Information("DragReorderBehavior re-initialized");
-                }), System.Windows.Threading.DispatcherPriority.Loaded);
-            }
         }
 
         public void FocusSearchBox()
@@ -89,77 +77,76 @@ namespace Stratum.Desktop.Panels
             }
         }
 
-        // Three-dot menu button click
-        private void MoreMenuButton_Click(object sender, RoutedEventArgs e)
+        private void GridViewButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.ContextMenu != null)
+            ListViewButton.IsChecked = false;
+            GridItemsControl.Visibility = Visibility.Visible;
+            ListItemsControl.Visibility = Visibility.Collapsed;
+        }
+
+        private void ListViewButton_Click(object sender, RoutedEventArgs e)
+        {
+            GridViewButton.IsChecked = false;
+            GridItemsControl.Visibility = Visibility.Collapsed;
+            ListItemsControl.Visibility = Visibility.Visible;
+        }
+
+        private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Theme toggle logic will be implemented later
+            _log.Information("Theme toggle clicked");
+        }
+
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
             {
-                button.ContextMenu.PlacementTarget = button;
-                button.ContextMenu.DataContext = button.Tag; // Set the authenticator as DataContext
-                button.ContextMenu.IsOpen = true;
+                viewModel.AddAuthenticatorCommand.Execute(null);
             }
         }
 
-        // Context menu handlers
-        private void CopyCode_Click(object sender, RoutedEventArgs e)
+        private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is MenuItem menuItem && 
-                menuItem.Parent is ContextMenu contextMenu &&
-                contextMenu.DataContext is AuthenticatorViewModel auth &&
+            if (sender is Button button && button.Tag is AuthenticatorViewModel auth &&
                 DataContext is MainViewModel viewModel)
             {
                 viewModel.CopyCodeCommand.Execute(auth);
+                ShowCopyFeedback(button);
             }
         }
 
-        private void EditAuthenticator_Click(object sender, RoutedEventArgs e)
+        private async void ShowCopyFeedback(Button button)
         {
-            if (sender is MenuItem menuItem && 
-                menuItem.Parent is ContextMenu contextMenu &&
-                contextMenu.DataContext is AuthenticatorViewModel auth &&
-                DataContext is MainViewModel viewModel)
-            {
-                viewModel.EditAuthenticatorCommand.Execute(auth);
-            }
-        }
+            var originalBackground = button.Background;
+            var originalBorderBrush = button.BorderBrush;
 
-        private void ShowQrCode_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is MenuItem menuItem && 
-                menuItem.Parent is ContextMenu contextMenu &&
-                contextMenu.DataContext is AuthenticatorViewModel auth &&
-                DataContext is MainViewModel viewModel)
-            {
-                viewModel.ShowQrCodeCommand.Execute(auth);
-            }
-        }
+            button.Background = (System.Windows.Media.Brush)FindResource("SuccessBrush");
+            button.BorderBrush = (System.Windows.Media.Brush)FindResource("SuccessBrush");
+            button.Foreground = System.Windows.Media.Brushes.White;
 
-        private void DeleteAuthenticator_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is MenuItem menuItem && 
-                menuItem.Parent is ContextMenu contextMenu &&
-                contextMenu.DataContext is AuthenticatorViewModel auth &&
-                DataContext is MainViewModel viewModel)
-            {
-                viewModel.DeleteAuthenticatorCommand.Execute(auth);
-            }
+            await System.Threading.Tasks.Task.Delay(2000);
+
+            button.Background = originalBackground;
+            button.BorderBrush = originalBorderBrush;
+            button.Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush");
         }
 
         private void AssignCategory_Click(object sender, RoutedEventArgs e)
         {
             AuthenticatorViewModel auth = null;
-            
-            // Handle both right-click context menu and three-dot button menu
+
             if (sender is MenuItem menuItem)
             {
                 if (menuItem.Parent is ContextMenu contextMenu)
                 {
-                    // From right-click context menu
-                    if (contextMenu.PlacementTarget is Border border && border.DataContext is AuthenticatorViewModel rightClickAuth)
+                    // From context menu: DataContext is the MainViewModel
+                    if (contextMenu.DataContext is MainViewModel &&
+                        contextMenu.PlacementTarget is FrameworkElement element &&
+                        element.DataContext is AuthenticatorViewModel targetAuth)
                     {
-                        auth = rightClickAuth;
+                        auth = targetAuth;
                     }
-                    // From three-dot button menu
+                    // Fallback: Tag-based binding
                     else if (contextMenu.DataContext is AuthenticatorViewModel threeDotAuth)
                     {
                         auth = threeDotAuth;
@@ -169,132 +156,15 @@ namespace Stratum.Desktop.Panels
 
             if (auth != null && DataContext is MainViewModel viewModel)
             {
-                // Open category assignment dialog
                 var categoryDialog = new Views.CategoryAssignmentDialog(auth)
                 {
                     Owner = Application.Current.MainWindow
                 };
-                
+
                 if (categoryDialog.ShowDialog() == true)
                 {
-                    // Category assignment is handled within the dialog
-                    // Refresh the view if needed
                     viewModel.SortAuthenticators("Custom");
                 }
-            }
-        }
-
-        // Sort menu handlers
-        private void SortMenuButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.ContextMenu != null)
-            {
-                button.ContextMenu.PlacementTarget = button;
-                button.ContextMenu.IsOpen = true;
-            }
-        }
-
-        private void SortByNameAsc_Click(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainViewModel viewModel)
-            {
-                viewModel.SortAuthenticators("NameAsc");
-            }
-        }
-
-        private void SortByNameDesc_Click(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainViewModel viewModel)
-            {
-                viewModel.SortAuthenticators("NameDesc");
-            }
-        }
-
-        private void SortByCopyCountAsc_Click(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainViewModel viewModel)
-            {
-                viewModel.SortAuthenticators("CopyCountAsc");
-            }
-        }
-
-        private void SortByCopyCountDesc_Click(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainViewModel viewModel)
-            {
-                viewModel.SortAuthenticators("CopyCountDesc");
-            }
-        }
-
-        private void SortCustom_Click(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainViewModel viewModel)
-            {
-                viewModel.SortAuthenticators("Custom");
-            }
-        }
-
-        // Category filter handlers
-        private void CategoryFilterButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && DataContext is MainViewModel viewModel)
-            {
-                // Clear existing menu items
-                CategoryContextMenu.Items.Clear();
-
-                // Add "All" option
-                var allMenuItem = new MenuItem
-                {
-                    Header = "All",
-                    Tag = null
-                };
-                allMenuItem.Click += CategoryMenuItem_Click;
-                if (viewModel.SelectedCategory == null)
-                {
-                    allMenuItem.FontWeight = FontWeights.Bold;
-                }
-                CategoryContextMenu.Items.Add(allMenuItem);
-
-                // Add separator if there are categories
-                if (viewModel.Categories.Count > 1) // Count > 1 because "All" is always included
-                {
-                    CategoryContextMenu.Items.Add(new Separator());
-                }
-
-                // Add category options
-                foreach (var category in viewModel.Categories)
-                {
-                    if (category.Id != null) // Skip the "All" category that's already added
-                    {
-                        var menuItem = new MenuItem
-                        {
-                            Header = category.Name,
-                            Tag = category
-                        };
-                        menuItem.Click += CategoryMenuItem_Click;
-                        
-                        // Highlight selected category
-                        if (viewModel.SelectedCategory?.Id == category.Id)
-                        {
-                            menuItem.FontWeight = FontWeights.Bold;
-                        }
-                        
-                        CategoryContextMenu.Items.Add(menuItem);
-                    }
-                }
-
-                // Show the context menu
-                button.ContextMenu.PlacementTarget = button;
-                button.ContextMenu.IsOpen = true;
-            }
-        }
-
-        private void CategoryMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is MenuItem menuItem && DataContext is MainViewModel viewModel)
-            {
-                var category = menuItem.Tag as Category;
-                viewModel.SelectedCategory = category;
             }
         }
     }
