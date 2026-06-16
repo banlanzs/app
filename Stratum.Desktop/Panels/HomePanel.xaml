@@ -4,7 +4,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:behaviors="clr-namespace:Stratum.Desktop.Behaviors"
-             xmlns:controls="clr-namespace:Stratum.Desktop.Controls"
              xmlns:converters="clr-namespace:Stratum.Desktop.Converters"
              xmlns:vm="clr-namespace:Stratum.Desktop.ViewModels"
              mc:Ignorable="d"
@@ -356,37 +355,33 @@
         </Border>
 
         <!-- Authenticator List Area -->
-        <Grid Grid.Row="1" Margin="0,0,0,0">
-            <!-- Grid View: Virtualized with VirtualizingWrapPanel -->
-            <ListBox x:Name="GridItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
-                     ItemTemplate="{StaticResource GridAuthenticatorTemplate}"
-                     Background="Transparent" BorderThickness="0"
-                     Visibility="Visible">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <controls:VirtualizingWrapPanel/>
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-            </ListBox>
+        <Grid Grid.Row="1">
+            <ScrollViewer x:Name="AuthScrollViewer" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="24,16,24,24">
+                <Grid>
+                    <!-- Grid View: Fixed width cards in responsive grid -->
+                    <ItemsControl x:Name="GridItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
+                                  ItemTemplate="{StaticResource GridAuthenticatorTemplate}"
+                                  Visibility="Visible">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="2"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style>
+                                <Setter Property="FrameworkElement.Margin" Value="8"/>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
 
-            <!-- List View: Virtualized ListBox -->
-            <ListBox x:Name="ListItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
-                     ItemTemplate="{StaticResource ListAuthenticatorTemplate}"
-                     Background="Transparent" BorderThickness="0"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                     Visibility="Collapsed">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-            </ListBox>
+                    <!-- List View: Vertical stack -->
+                    <ItemsControl x:Name="ListItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
+                                  ItemTemplate="{StaticResource ListAuthenticatorTemplate}"
+                                  Visibility="Collapsed"/>
+                </Grid>
+            </ScrollViewer>
 
             <!-- Empty State -->
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
