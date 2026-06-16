@@ -36,56 +36,72 @@ namespace Stratum.Desktop.Controls
                 return new Size(0, 0);
             }
 
+            // Handle infinite width
+            var width = double.IsInfinity(availableSize.Width) ? 800 : availableSize.Width;
+            var height = double.IsInfinity(availableSize.Height) ? 600 : availableSize.Height;
+
             // Calculate columns that fit in the available width
-            var columns = Math.Max(1, (int)((availableSize.Width + ItemMargin) / (ItemWidth + ItemMargin)));
+            var columns = Math.Max(1, (int)((width + ItemMargin) / (ItemWidth + ItemMargin)));
             var rows = (int)Math.Ceiling((double)itemCount / columns);
 
             // Calculate which items are visible
             var firstVisibleRow = (int)(_offset.Y / (ItemHeight + ItemMargin));
-            var lastVisibleRow = (int)((_offset.Y + _viewport.Height) / (ItemHeight + ItemMargin)) + 1;
+            var lastVisibleRow = (int)((_offset.Y + height) / (ItemHeight + ItemMargin)) + 1;
 
-            firstVisibleRow = Math.Max(0, firstVisibleRow);
-            lastVisibleRow = Math.Min(rows, lastVisibleRow);
+            firstVisibleRow = Math.Max(0, Math.Min(firstVisibleRow, rows - 1));
+            lastVisibleRow = Math.Max(firstVisibleRow, Math.Min(rows, lastVisibleRow));
 
             // Virtualize: only create containers for visible items
-            var generator = ItemContainerGenerator;
-            var startPos = generator.GeneratorPositionFromIndex(firstVisibleRow * columns);
-            var childIndex = (startPos.Offset == 0) ? startPos.Index : startPos.Index + 1;
-
-            using (generator.StartAt(startPos, GeneratorDirection.Forward, true))
+            try
             {
-                for (int row = firstVisibleRow; row < lastVisibleRow; row++)
+                var generator = ItemContainerGenerator;
+                if (generator == null)
                 {
-                    for (int col = 0; col < columns; col++)
+                    return _extent;
+                }
+
+                var startPos = generator.GeneratorPositionFromIndex(firstVisibleRow * columns);
+                var childIndex = (startPos.Offset == 0) ? startPos.Index : startPos.Index + 1;
+
+                using (generator.StartAt(startPos, GeneratorDirection.Forward, true))
+                {
+                    for (int row = firstVisibleRow; row < lastVisibleRow; row++)
                     {
-                        var itemIndex = row * columns + col;
-                        if (itemIndex >= itemCount)
-                            break;
-
-                        bool isNewlyRealized;
-                        var child = generator.GenerateNext(out isNewlyRealized) as UIElement;
-
-                        if (isNewlyRealized)
+                        for (int col = 0; col < columns; col++)
                         {
-                            if (childIndex >= InternalChildren.Count)
-                            {
-                                AddInternalChild(child);
-                            }
-                            else
-                            {
-                                InsertInternalChild(childIndex, child);
-                            }
-                            generator.PrepareItemContainer(child);
-                        }
+                            var itemIndex = row * columns + col;
+                            if (itemIndex >= itemCount)
+                                break;
 
-                        child?.Measure(new Size(ItemWidth, ItemHeight));
-                        childIndex++;
+                            bool isNewlyRealized;
+                            var child = generator.GenerateNext(out isNewlyRealized) as UIElement;
+
+                            if (isNewlyRealized && child != null)
+                            {
+                                if (childIndex >= InternalChildren.Count)
+                                {
+                                    AddInternalChild(child);
+                                }
+                                else
+                                {
+                                    InsertInternalChild(childIndex, child);
+                                }
+                                generator.PrepareItemContainer(child);
+                            }
+
+                            child?.Measure(new Size(ItemWidth, ItemHeight));
+                            childIndex++;
+                        }
                     }
                 }
-            }
 
-            // Clean up unrealized children
-            CleanUpItems(firstVisibleRow * columns, lastVisibleRow * columns);
+                // Clean up unrealized children
+                CleanUpItems(firstVisibleRow * columns, lastVisibleRow * columns);
+            }
+            catch
+            {
+                // Ignore generator errors during layout
+            }
 
             // Update extent
             _extent = new Size(
