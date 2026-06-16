@@ -349,5 +349,9 @@ publish/
 .ace-tool/
 .claude/
 
+# workflow
+.ccg/
+.workflow/
+
 #test
 Stratum.Desktop.PropertyTests/
