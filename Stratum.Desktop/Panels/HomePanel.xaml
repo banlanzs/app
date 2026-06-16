@@ -359,26 +359,63 @@
             <ScrollViewer x:Name="AuthScrollViewer" VerticalScrollBarVisibility="Auto"
                           Padding="24,16,24,24">
                 <Grid>
-                    <!-- Grid View: Fixed width cards in responsive grid -->
-                    <ItemsControl x:Name="GridItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
-                                  ItemTemplate="{StaticResource GridAuthenticatorTemplate}"
-                                  Visibility="Visible">
-                        <ItemsControl.ItemsPanel>
+                    <!-- Grid View: Virtualized ListBox with UniformGrid layout -->
+                    <ListBox x:Name="GridItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
+                             ItemTemplate="{StaticResource GridAuthenticatorTemplate}"
+                             Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling"
+                             VirtualizingPanel.CacheLength="2,2"
+                             VirtualizingPanel.CacheLengthUnit="Page"
+                             Visibility="Visible">
+                        <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <UniformGrid Columns="2"/>
                             </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemContainerStyle>
-                            <Style>
-                                <Setter Property="FrameworkElement.Margin" Value="8"/>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Margin" Value="8"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter/>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
                             </Style>
-                        </ItemsControl.ItemContainerStyle>
-                    </ItemsControl>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
 
-                    <!-- List View: Vertical stack -->
-                    <ItemsControl x:Name="ListItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
-                                  ItemTemplate="{StaticResource ListAuthenticatorTemplate}"
-                                  Visibility="Collapsed"/>
+                    <!-- List View: Virtualized ListBox -->
+                    <ListBox x:Name="ListItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
+                             ItemTemplate="{StaticResource ListAuthenticatorTemplate}"
+                             Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling"
+                             VirtualizingPanel.CacheLength="2,2"
+                             VirtualizingPanel.CacheLengthUnit="Page"
+                             Visibility="Collapsed">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter/>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
                 </Grid>
             </ScrollViewer>
 

@@ -22,6 +22,7 @@ namespace Stratum.Desktop.ViewModels
         private int _timeRemaining;
         private bool _justCopied;
         private CancellationTokenSource _copiedFeedbackTokenSource;
+        private ImageSource _cachedIconImage;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -29,6 +30,7 @@ namespace Stratum.Desktop.ViewModels
         {
             Auth = auth ?? throw new ArgumentNullException(nameof(auth));
             _iconResolver = App.Container.Resolve<IconResolver>();
+            _cachedIconImage = _iconResolver.GetIcon(Auth);
             UpdateCode();
         }
 
@@ -39,7 +41,7 @@ namespace Stratum.Desktop.ViewModels
         public bool HasUsername => !string.IsNullOrEmpty(Auth.Username);
         public string IssuerInitial => !string.IsNullOrEmpty(Auth.Issuer) ? Auth.Issuer[0].ToString().ToUpper() : "?";
         public string Icon => Auth.Icon;
-        public ImageSource IconImage => _iconResolver.GetIcon(Auth);
+        public ImageSource IconImage => _cachedIconImage;
         public int Period => Auth.Period;
         public int CopyCount => Auth.CopyCount;
         public bool IsTimeBased => Auth.Type.GetGenerationMethod() == GenerationMethod.Time;
@@ -110,6 +112,7 @@ namespace Stratum.Desktop.ViewModels
 
         public void RefreshFromAuth()
         {
+            _cachedIconImage = _iconResolver.GetIcon(Auth);
             OnPropertyChanged(nameof(Issuer));
             OnPropertyChanged(nameof(Username));
             OnPropertyChanged(nameof(HasUsername));

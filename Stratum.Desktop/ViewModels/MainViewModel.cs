@@ -193,6 +193,7 @@ namespace Stratum.Desktop.ViewModels
         private async void DebouncedApplyFilter(int delayMs)
         {
             _searchDebounce?.Cancel();
+            _searchDebounce?.Dispose();
             _searchDebounce = new CancellationTokenSource();
             var token = _searchDebounce.Token;
 
@@ -609,8 +610,14 @@ namespace Stratum.Desktop.ViewModels
         public void Dispose()
         {
             _preferenceManager.PreferencesChanged -= OnPreferencesChanged;
-            _updateTimer?.Stop();
-            _updateTimer?.Dispose();
+
+            if (_updateTimer != null)
+            {
+                _updateTimer.Elapsed -= UpdateTimer_Elapsed;
+                _updateTimer.Stop();
+                _updateTimer.Dispose();
+            }
+
             _searchDebounce?.Cancel();
             _searchDebounce?.Dispose();
 
