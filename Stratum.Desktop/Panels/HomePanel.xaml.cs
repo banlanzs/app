@@ -167,37 +167,5 @@ namespace Stratum.Desktop.Panels
                 }
             }
         }
-
-        private void ListBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            // Bubble scroll event to parent ScrollViewer
-            if (sender is ListBox listBox)
-            {
-                var scrollViewer = FindVisualChild<ScrollViewer>(listBox);
-                if (scrollViewer != null)
-                {
-                    scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta / 3.0);
-                    e.Handled = true;
-                }
-            }
-        }
-
-        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
-        {
-            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
-            {
-                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
-                if (child is T result)
-                {
-                    return result;
-                }
-                var childResult = FindVisualChild<T>(child);
-                if (childResult != null)
-                {
-                    return childResult;
-                }
-            }
-            return null;
-        }
     }
 }

@@ -15,23 +15,8 @@
         WindowStyle="None"
         AllowsTransparency="False"
         ResizeMode="CanResize"
-        Icon="pack://application:,,,/Assets/AppIcon.ico">
-
-    <Window.Resources>
-        <Style TargetType="Window">
-            <Setter Property="shell:WindowChrome.WindowChrome">
-                <Setter.Value>
-                    <shell:WindowChrome
-                        CaptionHeight="40"
-                        ResizeBorderThickness="5"
-                        GlassFrameThickness="0"
-                        CornerRadius="0"
-                        UseAeroCaptionButtons="False"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
-
+        Icon="pack://application:,,,/Assets/AppIcon.ico"
+        shell:WindowChrome.WindowChrome="{x:Null}">
 
     <Window.InputBindings>
         <KeyBinding Key="F" Modifiers="Ctrl" Command="{Binding FocusSearchCommand}"/>
@@ -48,7 +33,7 @@
         <!-- Custom Title Bar -->
         <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
-                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -66,7 +51,7 @@
                 </StackPanel>
 
                 <!-- Window Controls -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <Button x:Name="MinimizeButton" Width="46" Height="40" Style="{StaticResource IconButtonStyle}"
                             Click="MinimizeButton_Click" ToolTip="最小化">
                         <Path Data="M2 7h10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"

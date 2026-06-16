@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Autofac;
 using Drawing = System.Drawing;
 using Forms = System.Windows.Forms;
@@ -327,6 +328,18 @@ namespace Stratum.Desktop
         private void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
             WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                MaximizeButton_Click(sender, e);
+            }
+            else
+            {
+                DragMove();
+            }
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
