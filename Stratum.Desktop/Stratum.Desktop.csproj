@@ -34,6 +34,11 @@
         <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
         <EnableCppCLIHostActivation>false</EnableCppCLIHostActivation>
         <EnableGenericMath>false</EnableGenericMath>
+
+        <!-- GC Configuration for Lower Memory Usage -->
+        <ServerGarbageCollection>false</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+        <RetainVMGarbageCollection>false</RetainVMGarbageCollection>
     </PropertyGroup>
 
     <ItemGroup>
