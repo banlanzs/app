@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:behaviors="clr-namespace:Stratum.Desktop.Behaviors"
+             xmlns:controls="clr-namespace:Stratum.Desktop.Controls"
              xmlns:converters="clr-namespace:Stratum.Desktop.Converters"
              xmlns:vm="clr-namespace:Stratum.Desktop.ViewModels"
              mc:Ignorable="d"
@@ -355,38 +356,20 @@
         </Border>
 
         <!-- Authenticator List Area -->
-        <Grid Grid.Row="1">
-            <!-- Grid View: Virtualized ListBox with UniformGrid layout -->
+        <Grid Grid.Row="1" Margin="0,0,0,0">
+            <!-- Grid View: Virtualized with VirtualizingWrapPanel -->
             <ListBox x:Name="GridItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
                      ItemTemplate="{StaticResource GridAuthenticatorTemplate}"
                      Background="Transparent" BorderThickness="0"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                     VirtualizingPanel.IsVirtualizing="True"
-                     VirtualizingPanel.VirtualizationMode="Recycling"
-                     VirtualizingPanel.CacheLength="1,1"
-                     VirtualizingPanel.CacheLengthUnit="Page"
-                     Padding="24,16,24,24"
                      Visibility="Visible">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="2"/>
+                        <controls:VirtualizingWrapPanel/>
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Margin" Value="8"/>
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <ContentPresenter/>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
                     </Style>
                 </ListBox.ItemContainerStyle>
             </ListBox>
@@ -397,25 +380,10 @@
                      Background="Transparent" BorderThickness="0"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                     VirtualizingPanel.IsVirtualizing="True"
-                     VirtualizingPanel.VirtualizationMode="Recycling"
-                     VirtualizingPanel.CacheLength="1,1"
-                     VirtualizingPanel.CacheLengthUnit="Page"
-                     Padding="24,16,24,24"
                      Visibility="Collapsed">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <ContentPresenter/>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
                     </Style>
                 </ListBox.ItemContainerStyle>
             </ListBox>
