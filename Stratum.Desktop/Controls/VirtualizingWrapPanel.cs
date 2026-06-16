@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -10,218 +9,171 @@ using System.Windows.Media;
 
 namespace Stratum.Desktop.Controls
 {
-    /// <summary>
-    /// VirtualizingWrapPanel with support for uniform item sizing
-    /// </summary>
     public class VirtualizingWrapPanel : VirtualizingPanel, IScrollInfo
     {
-        private const double ItemWidth = 320;
-        private const double ItemHeight = 140;
-        private const double ItemMargin = 16;
+        private double _itemWidth = 320;
+        private double _itemHeight = 180;
+        private const double MinItemWidth = 300;
+        private const double ItemSpacing = 16;
 
-        private Size _extent = new Size(0, 0);
-        private Size _viewport = new Size(0, 0);
-        private Point _offset = new Point(0, 0);
+        private Size _extent;
+        private Size _viewport;
+        private Point _offset;
         private ScrollViewer _scrollOwner;
+        private int _columns = 1;
+        private int _rows;
 
         protected override Size MeasureOverride(Size availableSize)
         {
-            UpdateScrollInfo(availableSize);
+            if (double.IsInfinity(availableSize.Width) || double.IsNaN(availableSize.Width))
+                availableSize.Width = 800;
+            if (double.IsInfinity(availableSize.Height) || double.IsNaN(availableSize.Height))
+                availableSize.Height = 600;
 
             var itemsControl = ItemsControl.GetItemsOwner(this);
             var itemCount = itemsControl?.Items.Count ?? 0;
 
             if (itemCount == 0)
             {
+                _extent = _viewport = availableSize;
                 return new Size(0, 0);
             }
 
-            // Handle infinite width
-            var width = double.IsInfinity(availableSize.Width) ? 800 : availableSize.Width;
-            var height = double.IsInfinity(availableSize.Height) ? 600 : availableSize.Height;
+            _viewport = availableSize;
 
-            // Calculate columns that fit in the available width
-            var columns = Math.Max(1, (int)((width + ItemMargin) / (ItemWidth + ItemMargin)));
-            var rows = (int)Math.Ceiling((double)itemCount / columns);
+            // 自适应列宽
+            _columns = Math.Max(1, (int)(availableSize.Width / (MinItemWidth + ItemSpacing)));
+            _itemWidth = (availableSize.Width - (_columns - 1) * ItemSpacing) / _columns;
+            _rows = (int)Math.Ceiling((double)itemCount / _columns);
 
-            // Calculate which items are visible
-            var firstVisibleRow = (int)(_offset.Y / (ItemHeight + ItemMargin));
-            var lastVisibleRow = (int)((_offset.Y + height) / (ItemHeight + ItemMargin)) + 1;
+            _extent = new Size(availableSize.Width, _rows * (_itemHeight + ItemSpacing));
 
-            firstVisibleRow = Math.Max(0, Math.Min(firstVisibleRow, rows - 1));
-            lastVisibleRow = Math.Max(firstVisibleRow, Math.Min(rows, lastVisibleRow));
+            // 可视区域的行范围
+            var firstRow = Math.Max(0, (int)(_offset.Y / (_itemHeight + ItemSpacing)));
+            var lastRow = Math.Min(_rows, (int)Math.Ceiling((_offset.Y + availableSize.Height) / (_itemHeight + ItemSpacing)) + 1);
 
-            // Virtualize: only create containers for visible items
+            var generator = ItemContainerGenerator;
+            if (generator == null)
+                return new Size(availableSize.Width, Math.Max(0, _extent.Height - ItemSpacing));
+
             try
             {
-                var generator = ItemContainerGenerator;
-                if (generator == null)
-                {
-                    return _extent;
-                }
-
-                var startPos = generator.GeneratorPositionFromIndex(firstVisibleRow * columns);
-                var childIndex = (startPos.Offset == 0) ? startPos.Index : startPos.Index + 1;
+                var startPos = generator.GeneratorPositionFromIndex(firstRow * _columns);
+                var childIndex = startPos.Offset == 0 ? startPos.Index : startPos.Index + 1;
 
                 using (generator.StartAt(startPos, GeneratorDirection.Forward, true))
                 {
-                    for (int row = firstVisibleRow; row < lastVisibleRow; row++)
+                    for (int row = firstRow; row < lastRow; row++)
                     {
-                        for (int col = 0; col < columns; col++)
+                        for (int col = 0; col < _columns; col++)
                         {
-                            var itemIndex = row * columns + col;
+                            var itemIndex = row * _columns + col;
                             if (itemIndex >= itemCount)
                                 break;
 
                             bool isNewlyRealized;
                             var child = generator.GenerateNext(out isNewlyRealized) as UIElement;
+                            if (child == null)
+                                continue;
 
-                            if (isNewlyRealized && child != null)
+                            if (isNewlyRealized)
                             {
                                 if (childIndex >= InternalChildren.Count)
-                                {
                                     AddInternalChild(child);
-                                }
                                 else
-                                {
                                     InsertInternalChild(childIndex, child);
-                                }
                                 generator.PrepareItemContainer(child);
                             }
 
-                            child?.Measure(new Size(ItemWidth, ItemHeight));
+                            child.Measure(new Size(_itemWidth, _itemHeight));
                             childIndex++;
                         }
                     }
                 }
 
-                // Clean up unrealized children
-                CleanUpItems(firstVisibleRow * columns, lastVisibleRow * columns);
+                CleanUpItems(firstRow * _columns, lastRow * _columns);
             }
             catch
             {
-                // Ignore generator errors during layout
+                // Ignore generator errors
             }
 
-            // Update extent
-            _extent = new Size(
-                columns * (ItemWidth + ItemMargin) - ItemMargin,
-                rows * (ItemHeight + ItemMargin) - ItemMargin
-            );
-
-            return _extent;
+            return new Size(availableSize.Width, Math.Max(0, _extent.Height - ItemSpacing));
         }
 
         protected override Size ArrangeOverride(Size finalSize)
         {
             var generator = ItemContainerGenerator;
-            var columns = Math.Max(1, (int)((finalSize.Width + ItemMargin) / (ItemWidth + ItemMargin)));
-
             for (int i = 0; i < InternalChildren.Count; i++)
             {
                 var child = InternalChildren[i];
-                var itemIndex = generator.IndexFromGeneratorPosition(new GeneratorPosition(i, 0));
+                var itemIndex = generator?.IndexFromGeneratorPosition(new GeneratorPosition(i, 0)) ?? -1;
+                if (itemIndex < 0) continue;
 
-                if (itemIndex < 0)
-                    continue;
+                var row = itemIndex / _columns;
+                var col = itemIndex % _columns;
 
-                var row = itemIndex / columns;
-                var col = itemIndex % columns;
+                var x = col * (_itemWidth + ItemSpacing);
+                var y = row * (_itemHeight + ItemSpacing) - _offset.Y;
 
-                var x = col * (ItemWidth + ItemMargin);
-                var y = row * (ItemHeight + ItemMargin) - _offset.Y;
-
-                child.Arrange(new Rect(x, y, ItemWidth, ItemHeight));
+                child.Arrange(new Rect(x, y, _itemWidth, _itemHeight));
             }
-
             return finalSize;
         }
 
         private void CleanUpItems(int minIndex, int maxIndex)
         {
             var generator = ItemContainerGenerator;
-            var children = InternalChildren;
-
-            for (int i = children.Count - 1; i >= 0; i--)
+            for (int i = InternalChildren.Count - 1; i >= 0; i--)
             {
-                var childGeneratorPos = new GeneratorPosition(i, 0);
-                var itemIndex = generator.IndexFromGeneratorPosition(childGeneratorPos);
-
-                if (itemIndex < minIndex || itemIndex >= maxIndex)
+                var pos = new GeneratorPosition(i, 0);
+                var idx = generator?.IndexFromGeneratorPosition(pos) ?? -1;
+                if (idx >= 0 && (idx < minIndex || idx >= maxIndex))
                 {
-                    generator.Remove(childGeneratorPos, 1);
+                    generator.Remove(pos, 1);
                     RemoveInternalChildRange(i, 1);
                 }
             }
         }
 
-        private void UpdateScrollInfo(Size availableSize)
-        {
-            _viewport = availableSize;
-            _scrollOwner?.InvalidateScrollInfo();
-        }
-
-        #region IScrollInfo Implementation
+        #region IScrollInfo
 
         public bool CanHorizontallyScroll { get; set; }
         public bool CanVerticallyScroll { get; set; }
-
         public double ExtentHeight => _extent.Height;
         public double ExtentWidth => _extent.Width;
-
         public double ViewportHeight => _viewport.Height;
         public double ViewportWidth => _viewport.Width;
-
         public double HorizontalOffset => _offset.X;
         public double VerticalOffset => _offset.Y;
+        public ScrollViewer ScrollOwner { get => _scrollOwner; set => _scrollOwner = value; }
 
-        public ScrollViewer ScrollOwner
-        {
-            get => _scrollOwner;
-            set => _scrollOwner = value;
-        }
+        public void LineUp() => SetVerticalOffset(_offset.Y - 30);
+        public void LineDown() => SetVerticalOffset(_offset.Y + 30);
+        public void LineLeft() { }
+        public void LineRight() { }
+        public void PageUp() => SetVerticalOffset(_offset.Y - _viewport.Height);
+        public void PageDown() => SetVerticalOffset(_offset.Y + _viewport.Height);
+        public void PageLeft() { }
+        public void PageRight() { }
+        public void MouseWheelUp() => SetVerticalOffset(_offset.Y - 60);
+        public void MouseWheelDown() => SetVerticalOffset(_offset.Y + 60);
+        public void MouseWheelLeft() { }
+        public void MouseWheelRight() { }
 
-        public void LineUp() => SetVerticalOffset(VerticalOffset - 20);
-        public void LineDown() => SetVerticalOffset(VerticalOffset + 20);
-        public void LineLeft() => SetHorizontalOffset(HorizontalOffset - 20);
-        public void LineRight() => SetHorizontalOffset(HorizontalOffset + 20);
-
-        public void PageUp() => SetVerticalOffset(VerticalOffset - ViewportHeight);
-        public void PageDown() => SetVerticalOffset(VerticalOffset + ViewportHeight);
-        public void PageLeft() => SetHorizontalOffset(HorizontalOffset - ViewportWidth);
-        public void PageRight() => SetHorizontalOffset(HorizontalOffset + ViewportWidth);
-
-        public void MouseWheelUp() => SetVerticalOffset(VerticalOffset - 48);
-        public void MouseWheelDown() => SetVerticalOffset(VerticalOffset + 48);
-        public void MouseWheelLeft() => SetHorizontalOffset(HorizontalOffset - 48);
-        public void MouseWheelRight() => SetHorizontalOffset(HorizontalOffset + 48);
-
-        public void SetHorizontalOffset(double offset)
-        {
-            offset = Math.Max(0, Math.Min(offset, ExtentWidth - ViewportWidth));
-            if (Math.Abs(offset - _offset.X) > 0.1)
-            {
-                _offset.X = offset;
-                InvalidateMeasure();
-                _scrollOwner?.InvalidateScrollInfo();
-            }
-        }
+        public void SetHorizontalOffset(double offset) { }
 
         public void SetVerticalOffset(double offset)
         {
-            offset = Math.Max(0, Math.Min(offset, ExtentHeight - ViewportHeight));
-            if (Math.Abs(offset - _offset.Y) > 0.1)
+            offset = Math.Max(0, Math.Min(offset, Math.Max(0, _extent.Height - _viewport.Height)));
+            if (Math.Abs(offset - _offset.Y) > 0.5)
             {
                 _offset.Y = offset;
                 InvalidateMeasure();
-                _scrollOwner?.InvalidateScrollInfo();
             }
         }
 
-        public Rect MakeVisible(Visual visual, Rect rectangle)
-        {
-            return rectangle;
-        }
+        public Rect MakeVisible(Visual visual, Rect rectangle) => rectangle;
 
         #endregion
     }
