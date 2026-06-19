@@ -121,9 +121,31 @@ namespace Stratum.Desktop.ViewModels
         {
             if (!_updateTimer.Enabled)
             {
+                // 恢复可见时立即刷新一次，避免显示过期的验证码
+                RefreshTimeBasedCodes();
                 _updateTimer.Start();
             }
             await WarmUpIconsAsync();
+        }
+
+        /// <summary>暂停验证码刷新（隐藏到托盘 / 失焦驻留时调用，让 GC 在驻留态完全静默）。</summary>
+        public void SuspendUpdates()
+        {
+            if (_updateTimer != null && _updateTimer.Enabled)
+            {
+                _updateTimer.Stop();
+            }
+        }
+
+        private void RefreshTimeBasedCodes()
+        {
+            foreach (var auth in _authenticators)
+            {
+                if (auth.IsTimeBased)
+                {
+                    auth.UpdateCode();
+                }
+            }
         }
 
         private async Task LoadAuthenticatorsAsync()

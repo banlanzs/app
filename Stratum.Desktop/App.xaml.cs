@@ -85,6 +85,11 @@ namespace Stratum.Desktop
                 {
                     mainWindow.Show();
                 }
+                else
+                {
+                    // 静默驻留：待启动完全稳定后裁剪一次工作集
+                    ScheduleStartupTrim();
+                }
             }
             catch (Exception ex)
             {
@@ -96,6 +101,17 @@ namespace Stratum.Desktop
                     MessageBoxImage.Error);
                 Shutdown(1);
             }
+        }
+
+        private static void ScheduleStartupTrim()
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+            timer.Tick += (s, e) =>
+            {
+                timer.Stop();
+                WorkingSetTrimmer.Trim();
+            };
+            timer.Start();
         }
 
         private void LoadApplicationResources()

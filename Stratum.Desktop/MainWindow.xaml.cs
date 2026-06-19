@@ -8,8 +8,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Autofac;
-using Drawing = System.Drawing;
-using Forms = System.Windows.Forms;
 using Stratum.Core.Entity;
 using Stratum.Desktop.Panels;
 using Stratum.Desktop.Services;
@@ -26,11 +24,12 @@ namespace Stratum.Desktop
         private CategoriesPanel _categoriesPanel;
         private BackupPanel _backupPanel;
         private AboutPanel _aboutPanel;
-        private Forms.NotifyIcon _trayIcon;
+        private TrayIcon _trayIcon;
         private bool _isExitRequested;
         private bool _isUiInitialized;
         private StackPanel _categoryItemsPanel;
         private Button _allCategoryButton;
+        private System.Windows.Threading.DispatcherTimer _trimDebounceTimer;
 
         public MainWindow()
         {
@@ -38,6 +37,8 @@ namespace Stratum.Desktop
             Loaded += MainWindow_Loaded;
             StateChanged += MainWindow_StateChanged;
             Closing += MainWindow_Closing;
+            Deactivated += MainWindow_Deactivated;
+            Activated += MainWindow_Activated;
 
             // Setup sidebar categories
             SetupSidebar();
@@ -413,6 +414,7 @@ namespace Stratum.Desktop
 
         protected override void OnClosed(EventArgs e)
         {
+            _trimDebounceTimer?.Stop();
             _trayIcon?.Dispose();
             _viewModel?.Dispose();
             base.OnClosed(e);
@@ -420,10 +422,62 @@ namespace Stratum.Desktop
 
         private void MainWindow_StateChanged(object sender, EventArgs e)
         {
-            if (WindowState == WindowState.Minimized && _preferenceManager.Preferences.MinimizeToTray)
+            if (WindowState != WindowState.Minimized)
+            {
+                return;
+            }
+
+            if (_preferenceManager.Preferences.MinimizeToTray)
             {
                 HideToTray();
             }
+            else
+            {
+                // 最小化到任务栏（未进托盘）同样裁剪工作集
+                TrimWorkingSetWhenIdle();
+            }
+        }
+
+        private void MainWindow_Deactivated(object sender, EventArgs e)
+        {
+            // 失焦后延迟裁剪：用户切走（例如查看任务管理器）时回收工作集；
+            // 若很快切回则取消，避免影响 Alt-Tab 手感。
+            EnsureTrimDebounceTimer();
+            _trimDebounceTimer.Stop();
+            _trimDebounceTimer.Start();
+        }
+
+        private void MainWindow_Activated(object sender, EventArgs e)
+        {
+            _trimDebounceTimer?.Stop();
+        }
+
+        private void EnsureTrimDebounceTimer()
+        {
+            if (_trimDebounceTimer != null)
+            {
+                return;
+            }
+
+            _trimDebounceTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(4)
+            };
+            _trimDebounceTimer.Tick += (_, __) =>
+            {
+                _trimDebounceTimer.Stop();
+                if (!IsActive)
+                {
+                    WorkingSetTrimmer.Trim();
+                }
+            };
+        }
+
+        private void TrimWorkingSetWhenIdle()
+        {
+            Dispatcher.BeginInvoke(
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle,
+                new Action(WorkingSetTrimmer.Trim));
         }
 
         private void MainWindow_Closing(object sender, CancelEventArgs e)
@@ -444,38 +498,18 @@ namespace Stratum.Desktop
                 return;
             }
 
-            Drawing.Icon icon;
-            try
-            {
-                var resourceInfo = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/AppIcon.ico"));
-                if (resourceInfo != null)
-                {
-                    using var iconStream = resourceInfo.Stream;
-                    icon = new Drawing.Icon(iconStream);
-                }
-                else
-                {
-                    icon = Drawing.SystemIcons.Application;
-                }
-            }
-            catch
-            {
-                icon = Drawing.SystemIcons.Application;
-            }
+            var contextMenu = new ContextMenu();
 
-            var contextMenu = new Forms.ContextMenuStrip();
-            contextMenu.Items.Add("Open", null, (_, __) => ShowFromTray());
-            contextMenu.Items.Add("Exit", null, (_, __) => ExitFromTray());
+            var openItem = new MenuItem { Header = "Open" };
+            openItem.Click += (_, __) => ShowFromTray();
+            contextMenu.Items.Add(openItem);
 
-            _trayIcon = new Forms.NotifyIcon
-            {
-                Text = "Stratum",
-                Icon = icon,
-                Visible = false,
-                ContextMenuStrip = contextMenu
-            };
+            var exitItem = new MenuItem { Header = "Exit" };
+            exitItem.Click += (_, __) => ExitFromTray();
+            contextMenu.Items.Add(exitItem);
 
-            _trayIcon.DoubleClick += (_, __) => ShowFromTray();
+            _trayIcon = new TrayIcon("Stratum", contextMenu);
+            _trayIcon.DoubleClick += ShowFromTray;
         }
 
         private async void ShowFromTray()
@@ -510,7 +544,13 @@ namespace Stratum.Desktop
                 _trayIcon.Visible = true;
             }
 
+            // 暂停验证码刷新，隐藏后无需更新看不见的界面，让驻留态 GC 静默
+            _viewModel?.SuspendUpdates();
+
             Hide();
+
+            // 隐藏到托盘后，待渲染清理完成再裁剪工作集（驻留态主路径）
+            TrimWorkingSetWhenIdle();
         }
 
         private void ExitFromTray()

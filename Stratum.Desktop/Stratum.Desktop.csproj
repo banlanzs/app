@@ -3,7 +3,6 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0-windows</TargetFramework>
         <UseWPF>true</UseWPF>
-        <UseWindowsForms>true</UseWindowsForms>
         <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
@@ -56,5 +55,10 @@
 
     <ItemGroup>
         <Resource Include="Assets\**\*" />
+    </ItemGroup>
+
+    <!-- GC: 启用保守内存模式(0-9)，更积极地回收并把内存归还给操作系统 -->
+    <ItemGroup>
+        <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" Trim="false" />
     </ItemGroup>
 </Project>
