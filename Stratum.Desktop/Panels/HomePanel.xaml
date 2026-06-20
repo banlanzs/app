@@ -12,6 +12,29 @@
     <UserControl.Resources>
         <converters:IconSizeConverter x:Key="IconSizeConverter"/>
 
+        <!-- 网格/列表视图的 ItemsPanel：列表视图启用 UI 虚拟化 -->
+        <ItemsPanelTemplate x:Key="GridItemsPanel">
+            <UniformGrid Columns="2"/>
+        </ItemsPanelTemplate>
+        <ItemsPanelTemplate x:Key="ListItemsPanel">
+            <VirtualizingStackPanel/>
+        </ItemsPanelTemplate>
+
+        <!-- 容器样式：去除 ListBox 选择高亮，保持卡片原有交互与外观 -->
+        <Style x:Key="AuthItemContainerStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Grid Card Template -->
         <DataTemplate x:Key="GridAuthenticatorTemplate">
             <Border Background="{StaticResource SurfaceBrush}"
@@ -19,7 +42,7 @@
                     BorderThickness="1"
                     CornerRadius="12"
                     Padding="16"
-                    Margin="0,0,0,12"
+                    Margin="8"
                     Cursor="Hand"
                     Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
                 <Border.ContextMenu>
@@ -223,6 +246,18 @@
                 </Grid>
             </Border>
         </DataTemplate>
+
+        <!-- 网格"行"模板：行内用 UniformGrid 渲染该行卡片，外层 ListBox 按行虚拟化 -->
+        <DataTemplate x:Key="GridRowTemplate">
+            <ItemsControl ItemsSource="{Binding}"
+                          ItemTemplate="{StaticResource GridAuthenticatorTemplate}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>
@@ -356,32 +391,26 @@
 
         <!-- Authenticator List Area -->
         <Grid Grid.Row="1">
-            <ScrollViewer x:Name="AuthScrollViewer" VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          Padding="24,16,24,24">
-                <Grid>
-                    <!-- Grid View: Fixed width cards in responsive grid -->
-                    <ItemsControl x:Name="GridItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
-                                  ItemTemplate="{StaticResource GridAuthenticatorTemplate}"
-                                  Visibility="Visible">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Columns="2"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemContainerStyle>
-                            <Style>
-                                <Setter Property="FrameworkElement.Margin" Value="8"/>
-                            </Style>
-                        </ItemsControl.ItemContainerStyle>
-                    </ItemsControl>
-
-                    <!-- List View: Vertical stack -->
-                    <ItemsControl x:Name="ListItemsControl" ItemsSource="{Binding FilteredAuthenticators}"
-                                  ItemTemplate="{StaticResource ListAuthenticatorTemplate}"
-                                  Visibility="Collapsed"/>
-                </Grid>
-            </ScrollViewer>
+            <!-- 单一 ListBox：网格/列表视图通过切换 ItemsPanel 实现；列表视图启用虚拟化 -->
+            <ListBox x:Name="AuthListBox"
+                     ItemsSource="{Binding FilteredRows}"
+                     ItemTemplate="{StaticResource GridRowTemplate}"
+                     ItemContainerStyle="{StaticResource AuthItemContainerStyle}"
+                     Background="Transparent" BorderThickness="0"
+                     Padding="24,16,24,24"
+                     HorizontalContentAlignment="Stretch"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.CanContentScroll="True"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling"
+                     KeyboardNavigation.DirectionalNavigation="Contained">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+            </ListBox>
 
             <!-- Empty State -->
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"

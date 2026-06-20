@@ -80,15 +80,19 @@ namespace Stratum.Desktop.Panels
         private void GridViewButton_Click(object sender, RoutedEventArgs e)
         {
             ListViewButton.IsChecked = false;
-            GridItemsControl.Visibility = Visibility.Visible;
-            ListItemsControl.Visibility = Visibility.Collapsed;
+            GridViewButton.IsChecked = true;
+            // 网格视图：按行分组数据 + 行模板，VirtualizingStackPanel 行虚拟化
+            AuthListBox.ItemTemplate = (DataTemplate)FindResource("GridRowTemplate");
+            AuthListBox.SetBinding(ItemsControl.ItemsSourceProperty, new System.Windows.Data.Binding("FilteredRows"));
         }
 
         private void ListViewButton_Click(object sender, RoutedEventArgs e)
         {
             GridViewButton.IsChecked = false;
-            GridItemsControl.Visibility = Visibility.Collapsed;
-            ListItemsControl.Visibility = Visibility.Visible;
+            ListViewButton.IsChecked = true;
+            // 列表视图：扁平数据 + 行卡片模板，VirtualizingStackPanel 项虚拟化
+            AuthListBox.ItemTemplate = (DataTemplate)FindResource("ListAuthenticatorTemplate");
+            AuthListBox.SetBinding(ItemsControl.ItemsSourceProperty, new System.Windows.Data.Binding("FilteredAuthenticators"));
         }
 
         private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)

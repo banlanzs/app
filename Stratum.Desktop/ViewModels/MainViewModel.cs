@@ -43,6 +43,8 @@ namespace Stratum.Desktop.ViewModels
         private Category _selectedCategory;
         private RangeObservableCollection<AuthenticatorViewModel> _authenticators;
         private RangeObservableCollection<AuthenticatorViewModel> _filteredAuthenticators;
+        private readonly RangeObservableCollection<IReadOnlyList<AuthenticatorViewModel>> _filteredRows = new();
+        private const int GridColumns = 2;
         private ObservableCollection<Category> _categories;
         private AuthenticatorViewModel _selectedAuthenticator;
 
@@ -257,9 +259,27 @@ namespace Stratum.Desktop.ViewModels
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 _filteredAuthenticators.ReplaceAll(filtered);
+                RebuildRows();
                 OnPropertyChanged(nameof(FilteredAuthenticators));
                 OnPropertyChanged(nameof(IsEmpty));
             });
+        }
+
+        // 将扁平的过滤结果按列数分组成行，供网格视图用 VirtualizingStackPanel 做行虚拟化
+        private void RebuildRows()
+        {
+            var rows = new List<IReadOnlyList<AuthenticatorViewModel>>();
+            for (int i = 0; i < _filteredAuthenticators.Count; i += GridColumns)
+            {
+                var count = Math.Min(GridColumns, _filteredAuthenticators.Count - i);
+                var row = new AuthenticatorViewModel[count];
+                for (int j = 0; j < count; j++)
+                {
+                    row[j] = _filteredAuthenticators[i + j];
+                }
+                rows.Add(row);
+            }
+            _filteredRows.ReplaceAll(rows);
         }
 
         private void UpdateTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -562,6 +582,7 @@ namespace Stratum.Desktop.ViewModels
 
         public ObservableCollection<AuthenticatorViewModel> Authenticators => _authenticators;
         public ObservableCollection<AuthenticatorViewModel> FilteredAuthenticators => _filteredAuthenticators;
+        public ObservableCollection<IReadOnlyList<AuthenticatorViewModel>> FilteredRows => _filteredRows;
         public ObservableCollection<Category> Categories => _categories;
 
         public int AuthenticatorCount => _authenticators.Count;
